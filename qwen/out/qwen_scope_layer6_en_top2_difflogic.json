@@ -1,0 +1,776 @@
+{
+  "method": "qwen_scope_sections_5_1_1_5_1_2",
+  "paper_rule": "feature_delta_discovery_then_or_rule",
+  "model": "Qwen/Qwen3-1.7B-Base",
+  "sae_repo": "Qwen/SAE-Res-Qwen3-1.7B-Base-W32K-L0_50",
+  "layer": 6,
+  "top_k_features": 2,
+  "epsilon": 0.0,
+  "language": "en",
+  "dataset": "textdetox/multilingual_toxicity_dataset",
+  "text_key": "text",
+  "label_key": "toxic",
+  "classifier": "difflogic",
+  "features": [
+    {
+      "layer": 6,
+      "feature_id": 8674,
+      "delta": 0.7489999532699585,
+      "toxic_rate": 0.8029999732971191,
+      "clean_rate": 0.05400000140070915,
+      "toxic_count": 1606,
+      "clean_count": 108,
+      "n_toxic": 2000,
+      "n_clean": 2000
+    },
+    {
+      "layer": 6,
+      "feature_id": 7390,
+      "delta": 0.7480000257492065,
+      "toxic_rate": 0.9490000009536743,
+      "clean_rate": 0.20100000500679016,
+      "toxic_count": 1898,
+      "clean_count": 402,
+      "n_toxic": 2000,
+      "n_clean": 2000
+    }
+  ],
+  "ranked_features": [
+    {
+      "layer": 6,
+      "feature_id": 8674,
+      "delta": 0.7489999532699585,
+      "toxic_rate": 0.8029999732971191,
+      "clean_rate": 0.05400000140070915,
+      "toxic_count": 1606,
+      "clean_count": 108,
+      "n_toxic": 2000,
+      "n_clean": 2000
+    },
+    {
+      "layer": 6,
+      "feature_id": 7390,
+      "delta": 0.7480000257492065,
+      "toxic_rate": 0.9490000009536743,
+      "clean_rate": 0.20100000500679016,
+      "toxic_count": 1898,
+      "clean_count": 402,
+      "n_toxic": 2000,
+      "n_clean": 2000
+    },
+    {
+      "layer": 6,
+      "feature_id": 3172,
+      "delta": 0.5985000133514404,
+      "toxic_rate": 0.625,
+      "clean_rate": 0.026499999687075615,
+      "toxic_count": 1250,
+      "clean_count": 53,
+      "n_toxic": 2000,
+      "n_clean": 2000
+    },
+    {
+      "layer": 6,
+      "feature_id": 362,
+      "delta": 0.45399999618530273,
+      "toxic_rate": 0.625,
+      "clean_rate": 0.17100000381469727,
+      "toxic_count": 1250,
+      "clean_count": 342,
+      "n_toxic": 2000,
+      "n_clean": 2000
+    },
+    {
+      "layer": 6,
+      "feature_id": 29601,
+      "delta": 0.42650002241134644,
+      "toxic_rate": 0.7070000171661377,
+      "clean_rate": 0.28049999475479126,
+      "toxic_count": 1414,
+      "clean_count": 561,
+      "n_toxic": 2000,
+      "n_clean": 2000
+    },
+    {
+      "layer": 6,
+      "feature_id": 20110,
+      "delta": 0.41600000858306885,
+      "toxic_rate": 0.4805000126361847,
+      "clean_rate": 0.06449999660253525,
+      "toxic_count": 961,
+      "clean_count": 129,
+      "n_toxic": 2000,
+      "n_clean": 2000
+    },
+    {
+      "layer": 6,
+      "feature_id": 8116,
+      "delta": 0.41350001096725464,
+      "toxic_rate": 0.48500001430511475,
+      "clean_rate": 0.07150000333786011,
+      "toxic_count": 970,
+      "clean_count": 143,
+      "n_toxic": 2000,
+      "n_clean": 2000
+    },
+    {
+      "layer": 6,
+      "feature_id": 26733,
+      "delta": 0.4075000286102295,
+      "toxic_rate": 0.6980000138282776,
+      "clean_rate": 0.2904999852180481,
+      "toxic_count": 1396,
+      "clean_count": 581,
+      "n_toxic": 2000,
+      "n_clean": 2000
+    },
+    {
+      "layer": 6,
+      "feature_id": 25385,
+      "delta": 0.3790000081062317,
+      "toxic_rate": 0.7045000195503235,
+      "clean_rate": 0.3255000114440918,
+      "toxic_count": 1409,
+      "clean_count": 651,
+      "n_toxic": 2000,
+      "n_clean": 2000
+    },
+    {
+      "layer": 6,
+      "feature_id": 6261,
+      "delta": 0.375,
+      "toxic_rate": 0.5665000081062317,
+      "clean_rate": 0.1914999932050705,
+      "toxic_count": 1133,
+      "clean_count": 383,
+      "n_toxic": 2000,
+      "n_clean": 2000
+    },
+    {
+      "layer": 6,
+      "feature_id": 2511,
+      "delta": 0.36900001764297485,
+      "toxic_rate": 0.41850000619888306,
+      "clean_rate": 0.0494999997317791,
+      "toxic_count": 837,
+      "clean_count": 99,
+      "n_toxic": 2000,
+      "n_clean": 2000
+    },
+    {
+      "layer": 6,
+      "feature_id": 5162,
+      "delta": 0.35099998116493225,
+      "toxic_rate": 0.8389999866485596,
+      "clean_rate": 0.4880000054836273,
+      "toxic_count": 1678,
+      "clean_count": 976,
+      "n_toxic": 2000,
+      "n_clean": 2000
+    },
+    {
+      "layer": 6,
+      "feature_id": 3699,
+      "delta": 0.3474999964237213,
+      "toxic_rate": 0.44449999928474426,
+      "clean_rate": 0.09700000286102295,
+      "toxic_count": 889,
+      "clean_count": 194,
+      "n_toxic": 2000,
+      "n_clean": 2000
+    },
+    {
+      "layer": 6,
+      "feature_id": 1236,
+      "delta": 0.33899998664855957,
+      "toxic_rate": 0.35499998927116394,
+      "clean_rate": 0.01600000075995922,
+      "toxic_count": 710,
+      "clean_count": 32,
+      "n_toxic": 2000,
+      "n_clean": 2000
+    },
+    {
+      "layer": 6,
+      "feature_id": 26073,
+      "delta": 0.32850003242492676,
+      "toxic_rate": 0.6625000238418579,
+      "clean_rate": 0.33399999141693115,
+      "toxic_count": 1325,
+      "clean_count": 668,
+      "n_toxic": 2000,
+      "n_clean": 2000
+    },
+    {
+      "layer": 6,
+      "feature_id": 552,
+      "delta": 0.3255000114440918,
+      "toxic_rate": 0.5755000114440918,
+      "clean_rate": 0.25,
+      "toxic_count": 1151,
+      "clean_count": 500,
+      "n_toxic": 2000,
+      "n_clean": 2000
+    },
+    {
+      "layer": 6,
+      "feature_id": 4340,
+      "delta": 0.3255000114440918,
+      "toxic_rate": 0.4284999966621399,
+      "clean_rate": 0.10300000011920929,
+      "toxic_count": 857,
+      "clean_count": 206,
+      "n_toxic": 2000,
+      "n_clean": 2000
+    },
+    {
+      "layer": 6,
+      "feature_id": 20149,
+      "delta": 0.31949999928474426,
+      "toxic_rate": 0.34599998593330383,
+      "clean_rate": 0.026499999687075615,
+      "toxic_count": 692,
+      "clean_count": 53,
+      "n_toxic": 2000,
+      "n_clean": 2000
+    },
+    {
+      "layer": 6,
+      "feature_id": 19776,
+      "delta": 0.31449997425079346,
+      "toxic_rate": 0.445499986410141,
+      "clean_rate": 0.13099999725818634,
+      "toxic_count": 891,
+      "clean_count": 262,
+      "n_toxic": 2000,
+      "n_clean": 2000
+    },
+    {
+      "layer": 6,
+      "feature_id": 24096,
+      "delta": 0.2979999780654907,
+      "toxic_rate": 0.7574999928474426,
+      "clean_rate": 0.4595000147819519,
+      "toxic_count": 1515,
+      "clean_count": 919,
+      "n_toxic": 2000,
+      "n_clean": 2000
+    },
+    {
+      "layer": 6,
+      "feature_id": 13301,
+      "delta": 0.2954999804496765,
+      "toxic_rate": 0.5734999775886536,
+      "clean_rate": 0.27799999713897705,
+      "toxic_count": 1147,
+      "clean_count": 556,
+      "n_toxic": 2000,
+      "n_clean": 2000
+    },
+    {
+      "layer": 6,
+      "feature_id": 12237,
+      "delta": 0.29350000619888306,
+      "toxic_rate": 0.7269999980926514,
+      "clean_rate": 0.4334999918937683,
+      "toxic_count": 1454,
+      "clean_count": 867,
+      "n_toxic": 2000,
+      "n_clean": 2000
+    },
+    {
+      "layer": 6,
+      "feature_id": 21945,
+      "delta": 0.2854999899864197,
+      "toxic_rate": 0.359499990940094,
+      "clean_rate": 0.07400000095367432,
+      "toxic_count": 719,
+      "clean_count": 148,
+      "n_toxic": 2000,
+      "n_clean": 2000
+    },
+    {
+      "layer": 6,
+      "feature_id": 7619,
+      "delta": 0.2824999988079071,
+      "toxic_rate": 0.32100000977516174,
+      "clean_rate": 0.03849999979138374,
+      "toxic_count": 642,
+      "clean_count": 77,
+      "n_toxic": 2000,
+      "n_clean": 2000
+    },
+    {
+      "layer": 6,
+      "feature_id": 24349,
+      "delta": 0.281499981880188,
+      "toxic_rate": 0.4699999988079071,
+      "clean_rate": 0.18850000202655792,
+      "toxic_count": 940,
+      "clean_count": 377,
+      "n_toxic": 2000,
+      "n_clean": 2000
+    },
+    {
+      "layer": 6,
+      "feature_id": 13342,
+      "delta": 0.2719999849796295,
+      "toxic_rate": 0.33899998664855957,
+      "clean_rate": 0.06700000166893005,
+      "toxic_count": 678,
+      "clean_count": 134,
+      "n_toxic": 2000,
+      "n_clean": 2000
+    },
+    {
+      "layer": 6,
+      "feature_id": 4822,
+      "delta": 0.2695000171661377,
+      "toxic_rate": 0.34850001335144043,
+      "clean_rate": 0.07900000363588333,
+      "toxic_count": 697,
+      "clean_count": 158,
+      "n_toxic": 2000,
+      "n_clean": 2000
+    },
+    {
+      "layer": 6,
+      "feature_id": 31647,
+      "delta": 0.2685000002384186,
+      "toxic_rate": 0.4300000071525574,
+      "clean_rate": 0.1615000069141388,
+      "toxic_count": 860,
+      "clean_count": 323,
+      "n_toxic": 2000,
+      "n_clean": 2000
+    },
+    {
+      "layer": 6,
+      "feature_id": 11734,
+      "delta": 0.25999999046325684,
+      "toxic_rate": 0.3009999990463257,
+      "clean_rate": 0.04100000113248825,
+      "toxic_count": 602,
+      "clean_count": 82,
+      "n_toxic": 2000,
+      "n_clean": 2000
+    },
+    {
+      "layer": 6,
+      "feature_id": 14974,
+      "delta": 0.2499999850988388,
+      "toxic_rate": 0.27149999141693115,
+      "clean_rate": 0.0215000007301569,
+      "toxic_count": 543,
+      "clean_count": 43,
+      "n_toxic": 2000,
+      "n_clean": 2000
+    },
+    {
+      "layer": 6,
+      "feature_id": 31831,
+      "delta": 0.242000013589859,
+      "toxic_rate": 0.4090000092983246,
+      "clean_rate": 0.16699999570846558,
+      "toxic_count": 818,
+      "clean_count": 334,
+      "n_toxic": 2000,
+      "n_clean": 2000
+    },
+    {
+      "layer": 6,
+      "feature_id": 3817,
+      "delta": 0.2409999966621399,
+      "toxic_rate": 0.3684999942779541,
+      "clean_rate": 0.1274999976158142,
+      "toxic_count": 737,
+      "clean_count": 255,
+      "n_toxic": 2000,
+      "n_clean": 2000
+    },
+    {
+      "layer": 6,
+      "feature_id": 31939,
+      "delta": 0.2395000159740448,
+      "toxic_rate": 0.3465000092983246,
+      "clean_rate": 0.10700000077486038,
+      "toxic_count": 693,
+      "clean_count": 214,
+      "n_toxic": 2000,
+      "n_clean": 2000
+    },
+    {
+      "layer": 6,
+      "feature_id": 6533,
+      "delta": 0.23349998891353607,
+      "toxic_rate": 0.4154999852180481,
+      "clean_rate": 0.18199999630451202,
+      "toxic_count": 831,
+      "clean_count": 364,
+      "n_toxic": 2000,
+      "n_clean": 2000
+    },
+    {
+      "layer": 6,
+      "feature_id": 4008,
+      "delta": 0.23150001466274261,
+      "toxic_rate": 0.4805000126361847,
+      "clean_rate": 0.24899999797344208,
+      "toxic_count": 961,
+      "clean_count": 498,
+      "n_toxic": 2000,
+      "n_clean": 2000
+    },
+    {
+      "layer": 6,
+      "feature_id": 29018,
+      "delta": 0.23100002110004425,
+      "toxic_rate": 0.36000001430511475,
+      "clean_rate": 0.1289999932050705,
+      "toxic_count": 720,
+      "clean_count": 258,
+      "n_toxic": 2000,
+      "n_clean": 2000
+    },
+    {
+      "layer": 6,
+      "feature_id": 163,
+      "delta": 0.226500004529953,
+      "toxic_rate": 0.656000018119812,
+      "clean_rate": 0.429500013589859,
+      "toxic_count": 1312,
+      "clean_count": 859,
+      "n_toxic": 2000,
+      "n_clean": 2000
+    },
+    {
+      "layer": 6,
+      "feature_id": 6600,
+      "delta": 0.22450000047683716,
+      "toxic_rate": 0.24250000715255737,
+      "clean_rate": 0.017999999225139618,
+      "toxic_count": 485,
+      "clean_count": 36,
+      "n_toxic": 2000,
+      "n_clean": 2000
+    },
+    {
+      "layer": 6,
+      "feature_id": 6483,
+      "delta": 0.21900001168251038,
+      "toxic_rate": 0.5005000233650208,
+      "clean_rate": 0.2815000116825104,
+      "toxic_count": 1001,
+      "clean_count": 563,
+      "n_toxic": 2000,
+      "n_clean": 2000
+    },
+    {
+      "layer": 6,
+      "feature_id": 16796,
+      "delta": 0.2160000205039978,
+      "toxic_rate": 0.3970000147819519,
+      "clean_rate": 0.1809999942779541,
+      "toxic_count": 794,
+      "clean_count": 362,
+      "n_toxic": 2000,
+      "n_clean": 2000
+    },
+    {
+      "layer": 6,
+      "feature_id": 28883,
+      "delta": 0.21149998903274536,
+      "toxic_rate": 0.2904999852180481,
+      "clean_rate": 0.07900000363588333,
+      "toxic_count": 581,
+      "clean_count": 158,
+      "n_toxic": 2000,
+      "n_clean": 2000
+    },
+    {
+      "layer": 6,
+      "feature_id": 1598,
+      "delta": 0.20900000631809235,
+      "toxic_rate": 0.32850000262260437,
+      "clean_rate": 0.11949999630451202,
+      "toxic_count": 657,
+      "clean_count": 239,
+      "n_toxic": 2000,
+      "n_clean": 2000
+    },
+    {
+      "layer": 6,
+      "feature_id": 18292,
+      "delta": 0.20650000870227814,
+      "toxic_rate": 0.2150000035762787,
+      "clean_rate": 0.008500000461935997,
+      "toxic_count": 430,
+      "clean_count": 17,
+      "n_toxic": 2000,
+      "n_clean": 2000
+    },
+    {
+      "layer": 6,
+      "feature_id": 19215,
+      "delta": 0.20550000667572021,
+      "toxic_rate": 0.2775000035762787,
+      "clean_rate": 0.07199999690055847,
+      "toxic_count": 555,
+      "clean_count": 144,
+      "n_toxic": 2000,
+      "n_clean": 2000
+    },
+    {
+      "layer": 6,
+      "feature_id": 27139,
+      "delta": 0.2004999965429306,
+      "toxic_rate": 0.21400000154972076,
+      "clean_rate": 0.013500000350177288,
+      "toxic_count": 428,
+      "clean_count": 27,
+      "n_toxic": 2000,
+      "n_clean": 2000
+    },
+    {
+      "layer": 6,
+      "feature_id": 14649,
+      "delta": 0.1965000033378601,
+      "toxic_rate": 0.25699999928474426,
+      "clean_rate": 0.060499999672174454,
+      "toxic_count": 514,
+      "clean_count": 121,
+      "n_toxic": 2000,
+      "n_clean": 2000
+    },
+    {
+      "layer": 6,
+      "feature_id": 19873,
+      "delta": 0.19499999284744263,
+      "toxic_rate": 0.2994999885559082,
+      "clean_rate": 0.10450000315904617,
+      "toxic_count": 599,
+      "clean_count": 209,
+      "n_toxic": 2000,
+      "n_clean": 2000
+    },
+    {
+      "layer": 6,
+      "feature_id": 8267,
+      "delta": 0.18950000405311584,
+      "toxic_rate": 0.22050000727176666,
+      "clean_rate": 0.03099999949336052,
+      "toxic_count": 441,
+      "clean_count": 62,
+      "n_toxic": 2000,
+      "n_clean": 2000
+    },
+    {
+      "layer": 6,
+      "feature_id": 3336,
+      "delta": 0.18250000476837158,
+      "toxic_rate": 0.3695000112056732,
+      "clean_rate": 0.18700000643730164,
+      "toxic_count": 739,
+      "clean_count": 374,
+      "n_toxic": 2000,
+      "n_clean": 2000
+    },
+    {
+      "layer": 6,
+      "feature_id": 3828,
+      "delta": 0.18150001764297485,
+      "toxic_rate": 0.33000001311302185,
+      "clean_rate": 0.148499995470047,
+      "toxic_count": 660,
+      "clean_count": 297,
+      "n_toxic": 2000,
+      "n_clean": 2000
+    }
+  ],
+  "ranked_features_top_k": 50,
+  "or_metrics": {
+    "accuracy": 0.867,
+    "precision": 0.8126064735945485,
+    "recall": 0.954,
+    "f1": 0.8776448942042319,
+    "tp": 477,
+    "fp": 110,
+    "tn": 390,
+    "fn": 23
+  },
+  "logic_classifier": {
+    "architecture": {
+      "input_dim": 2,
+      "logic_layer_dims": [
+        2,
+        1
+      ],
+      "output_mode": "binary",
+      "group_sum_k": null,
+      "tau": null,
+      "threshold": 0.5,
+      "implementation": "python",
+      "device": "cpu",
+      "connections": "random"
+    },
+    "training": {
+      "epochs": 100,
+      "batch_size": 256,
+      "learning_rate": 0.01,
+      "seed": 0,
+      "final_loss": 0.26117120373249053,
+      "loss_first": 0.37718275308609006
+    },
+    "feature_ids": [
+      8674,
+      7390
+    ],
+    "train_soft_metrics": {
+      "accuracy": 0.88225,
+      "precision": 0.9693063228974831,
+      "recall": 0.7895,
+      "f1": 0.8702121796638191,
+      "tp": 1579,
+      "fp": 50,
+      "tn": 1950,
+      "fn": 421
+    },
+    "eval_soft_metrics": {
+      "accuracy": 0.882,
+      "precision": 0.9775,
+      "recall": 0.782,
+      "f1": 0.8688888888888888,
+      "tp": 391,
+      "fp": 9,
+      "tn": 491,
+      "fn": 109
+    },
+    "train_hard_metrics": {
+      "accuracy": 0.8745,
+      "precision": 0.9369894982497082,
+      "recall": 0.803,
+      "f1": 0.8648357565966615,
+      "tp": 1606,
+      "fp": 108,
+      "tn": 1892,
+      "fn": 394
+    },
+    "eval_hard_metrics": {
+      "accuracy": 0.872,
+      "precision": 0.9366197183098591,
+      "recall": 0.798,
+      "f1": 0.8617710583153348,
+      "tp": 399,
+      "fp": 27,
+      "tn": 473,
+      "fn": 101
+    },
+    "hard_circuit": {
+      "format": "difflogic_hard_circuit_v1",
+      "output_mode": "binary",
+      "inputs": [
+        {
+          "name": "i1",
+          "feature_id": 8674,
+          "description": "top_feature_1_fires"
+        },
+        {
+          "name": "i2",
+          "feature_id": 7390,
+          "description": "top_feature_2_fires"
+        }
+      ],
+      "operators": [
+        "zero",
+        "and",
+        "a_and_not_b",
+        "a",
+        "b_and_not_a",
+        "b",
+        "xor",
+        "or",
+        "nor",
+        "xnor",
+        "not_b",
+        "b_implies_a",
+        "not_a",
+        "a_implies_b",
+        "nand",
+        "one"
+      ],
+      "layers": [
+        {
+          "layer": 0,
+          "in_dim": 2,
+          "out_dim": 2,
+          "nodes": [
+            {
+              "id": "L0.g0",
+              "op_index": 3,
+              "op": "a",
+              "inputs": [
+                "i1",
+                "i2"
+              ],
+              "input_indices": [
+                0,
+                1
+              ],
+              "expression": "i1"
+            },
+            {
+              "id": "L0.g1",
+              "op_index": 3,
+              "op": "a",
+              "inputs": [
+                "i2",
+                "i1"
+              ],
+              "input_indices": [
+                1,
+                0
+              ],
+              "expression": "i2"
+            }
+          ]
+        },
+        {
+          "layer": 1,
+          "in_dim": 2,
+          "out_dim": 1,
+          "nodes": [
+            {
+              "id": "L1.g0",
+              "op_index": 3,
+              "op": "a",
+              "inputs": [
+                "L0.g0",
+                "L0.g1"
+              ],
+              "input_indices": [
+                0,
+                1
+              ],
+              "expression": "i1"
+            }
+          ]
+        }
+      ],
+      "binary_output": {
+        "term": "L1.g0",
+        "expression": "i1",
+        "decision": "toxic if expression == 1; clean if expression == 0"
+      }
+    }
+  },
+  "metrics": {
+    "accuracy": 0.872,
+    "precision": 0.9366197183098591,
+    "recall": 0.798,
+    "f1": 0.8617710583153348,
+    "tp": 399,
+    "fp": 27,
+    "tn": 473,
+    "fn": 101
+  }
+}
