@@ -123,6 +123,63 @@ But the classifier can learn connections such as:
 
 This is useful because it can express feature interactions. For example, a feature may be noisy alone, but useful when combined with another feature.
 
+## Gemma Scope Version
+
+We also added a Gemma version of the same experiment:
+
+```text
+qwen/gemma_scope_toxicity_classifier.py
+```
+
+This keeps the same toxicity dataset, feature discovery rule, OR baseline, and difflogic classifier, but swaps Qwen-Scope for Google DeepMind's Gemma Scope SAEs:
+
+```text
+model:              google/gemma-2-2b
+SAE release:        gemma-scope-2b-pt-res-canonical
+SAE id:             layer_20/width_16k/canonical
+Neuronpedia model:  gemma-2-2b
+Neuronpedia source: 20-gemmascope-res-16k
+```
+
+Gemma Scope sources:
+
+```text
+Gemma Scope landing page:
+https://huggingface.co/google/gemma-scope
+
+Gemma 2 2B residual SAE repo:
+https://huggingface.co/google/gemma-scope-2b-pt-res
+
+Neuronpedia source for layer 20 residual 16k:
+https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/3585
+```
+
+Gemma Scope loading uses SAELens, so install it in the environment before running:
+
+```bash
+pip install sae-lens
+```
+
+Run example:
+
+```bash
+qwen/.venv/bin/python qwen/gemma_scope_toxicity_classifier.py \
+  --language en \
+  --layer 20 \
+  --top-k-features 8 \
+  --batch-size 4 \
+  --classifier difflogic \
+  --logic-output binary \
+  --logic-dims 8,4,2,1
+```
+
+The selected Gemma features are saved with Neuronpedia URLs and, when available, automatic explanations:
+
+```text
+features[*].neuronpedia.neuronpedia_url
+features[*].neuronpedia.explanations
+```
+
 ## Binary Toxic Circuit
 
 The difflogic experiment uses a **single hard binary toxic circuit**:
