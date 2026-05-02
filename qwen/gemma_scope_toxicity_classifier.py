@@ -18,6 +18,12 @@ from typing import Any, Iterable, Sequence
 import torch
 from tqdm import tqdm
 
+# Avoid optional vision backends during text-only Gemma loading. In this venv,
+# torchvision is present but ABI-mismatched with torch, and Transformers imports
+# it through image_utils unless these flags are set before importing transformers.
+os.environ.setdefault("TRANSFORMERS_NO_TORCHVISION", "1")
+os.environ.setdefault("TRANSFORMERS_NO_VISION", "1")
+
 from qwen_scope_toxicity_classifier import (
     Metrics,
     ToxicFeature,
@@ -40,6 +46,15 @@ DEFAULT_DATASET = "textdetox/multilingual_toxicity_dataset"
 DEFAULT_LAYER = 20
 DEFAULT_TOP_K = 8
 DEFAULT_OUT_DIR = Path(__file__).resolve().parent / "out"
+SUPPORTED_CUDA_CAPABILITIES = {
+    (7, 0),
+    (7, 5),
+    (8, 0),
+    (8, 6),
+    (9, 0),
+    (10, 0),
+    (12, 0),
+}
 
 
 def run_name(*, layer: int, language: str, top_k_features: int) -> str:
@@ -234,26 +249,107 @@ def fetch_neuronpedia_feature(model_id: str, source: str, feature_id: int, *, ti
     }
 
 
+def default_neuronpedia_cache_path(model_id: str, source: str) -> Path:
+    safe_model = model_id.replace("/", "__")
+    safe_source = source.replace("/", "__")
+    return DEFAULT_OUT_DIR / "neuronpedia_cache" / f"{safe_model}__{safe_source}.json"
+
+
+def load_neuronpedia_cache(path: str | Path | None) -> dict[int, dict[str, Any]]:
+    if path is None:
+        return {}
+    cache_path = Path(path)
+    if not cache_path.exists():
+        return {}
+    payload = json.loads(cache_path.read_text(encoding="utf-8"))
+    features = payload.get("features", payload)
+    return {int(k): v for k, v in features.items()}
+
+
+def top_neuronpedia_explanation(neuronpedia: dict[str, Any] | None) -> str | None:
+    if not neuronpedia:
+        return None
+    explanations = neuronpedia.get("explanations") or []
+    for explanation in explanations:
+        if isinstance(explanation, dict) and explanation.get("text"):
+            return str(explanation["text"])
+    return None
+
+
+def fallback_neuronpedia_entry(model_id: str, source: str, feature_id: int) -> dict[str, Any]:
+    return {
+        "feature_id": int(feature_id),
+        "neuronpedia_url": f"https://www.neuronpedia.org/{model_id}/{source}/{feature_id}",
+    }
+
+
 def enrich_features_with_neuronpedia(
     features: Sequence[ToxicFeature],
     *,
     model_id: str,
     source: str,
     enabled: bool,
+    cache: dict[int, dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     enriched = []
+    cache = cache or {}
     for feature in features:
         item = asdict(feature)
+        cached = cache.get(feature.feature_id)
         item["neuronpedia"] = (
-            fetch_neuronpedia_feature(model_id, source, feature.feature_id)
+            cached
+            if cached is not None
+            else fetch_neuronpedia_feature(model_id, source, feature.feature_id)
             if enabled
-            else {
-                "feature_id": feature.feature_id,
-                "neuronpedia_url": f"https://www.neuronpedia.org/{model_id}/{source}/{feature.feature_id}",
-            }
+            else fallback_neuronpedia_entry(model_id, source, feature.feature_id)
         )
         enriched.append(item)
     return enriched
+
+
+def feature_meaning_lookup(
+    features: Sequence[ToxicFeature],
+    *,
+    model_id: str,
+    source: str,
+    cache: dict[int, dict[str, Any]],
+) -> dict[int, dict[str, Any]]:
+    lookup = {}
+    for feature in features:
+        entry = cache.get(feature.feature_id) or fallback_neuronpedia_entry(model_id, source, feature.feature_id)
+        lookup[feature.feature_id] = {
+            "feature_id": feature.feature_id,
+            "neuronpedia_url": entry.get("neuronpedia_url")
+            or f"https://www.neuronpedia.org/{model_id}/{source}/{feature.feature_id}",
+            "explanations": entry.get("explanations", []),
+            "top_explanation": top_neuronpedia_explanation(entry),
+        }
+    return lookup
+
+
+def attach_feature_meanings_to_logic_result(
+    logic_result: dict[str, Any] | None,
+    *,
+    features: Sequence[ToxicFeature],
+    model_id: str,
+    source: str,
+    cache: dict[int, dict[str, Any]],
+) -> None:
+    if logic_result is None:
+        return
+    circuit = logic_result.get("hard_circuit")
+    if not isinstance(circuit, dict):
+        return
+    meanings = feature_meaning_lookup(features, model_id=model_id, source=source, cache=cache)
+    by_input_name = {}
+    for index, feature in enumerate(features, start=1):
+        by_input_name[f"i{index}"] = meanings[feature.feature_id]
+    for input_item in circuit.get("inputs", []):
+        if isinstance(input_item, dict):
+            meaning = by_input_name.get(input_item.get("name"))
+            if meaning:
+                input_item["meaning"] = meaning
+    circuit["feature_meanings"] = by_input_name
 
 
 def save_results(
@@ -268,6 +364,7 @@ def save_results(
     text_key: str,
     label_key: str,
 ) -> None:
+    neuronpedia_cache = load_neuronpedia_cache(args.neuronpedia_cache)
     payload = {
         "method": "gemma_scope_sae_toxicity_classifier",
         "model": args.model,
@@ -275,6 +372,7 @@ def save_results(
         "sae_id": args.sae_id,
         "neuronpedia_model": args.neuronpedia_model,
         "neuronpedia_source": args.neuronpedia_source,
+        "neuronpedia_cache": args.neuronpedia_cache,
         "layer": args.layer,
         "top_k_features": args.top_k_features,
         "epsilon": args.epsilon,
@@ -288,12 +386,14 @@ def save_results(
             model_id=args.neuronpedia_model,
             source=args.neuronpedia_source,
             enabled=not args.no_neuronpedia,
+            cache=neuronpedia_cache,
         ),
         "ranked_features": enrich_features_with_neuronpedia(
             ranked_features,
             model_id=args.neuronpedia_model,
             source=args.neuronpedia_source,
             enabled=False,
+            cache=neuronpedia_cache,
         ),
         "ranked_features_top_k": len(ranked_features),
         "or_metrics": asdict(or_metrics),
@@ -305,6 +405,46 @@ def save_results(
         json.dump(payload, f, indent=2, ensure_ascii=False)
 
 
+def disable_broken_torchvision_import() -> None:
+    """Tell Transformers not to import torchvision for this text-only script.
+
+    Some environments have a torchvision wheel that is ABI-incompatible with
+    torch. Transformers only needs torchvision for optional vision utilities,
+    but Gemma2 model import can still pass through image_utils. Marking
+    torchvision unavailable avoids failing on an optional dependency.
+    """
+    os.environ.setdefault("TRANSFORMERS_NO_TORCHVISION", "1")
+    os.environ.setdefault("TRANSFORMERS_NO_VISION", "1")
+    try:
+        import transformers.utils as transformers_utils
+        import transformers.utils.import_utils as import_utils
+    except Exception:
+        return
+    import_utils.is_torchvision_available = lambda: False
+    import_utils.is_torchvision_v2_available = lambda: False
+    transformers_utils.is_torchvision_available = lambda: False
+    transformers_utils.is_torchvision_v2_available = lambda: False
+
+
+def choose_device(requested: str | None) -> torch.device:
+    if requested:
+        return torch.device(requested)
+    if not torch.cuda.is_available():
+        return torch.device("cpu")
+
+    capability = torch.cuda.get_device_capability()
+    if capability not in SUPPORTED_CUDA_CAPABILITIES:
+        name = torch.cuda.get_device_name()
+        supported = ", ".join(f"{major}.{minor}" for major, minor in sorted(SUPPORTED_CUDA_CAPABILITIES))
+        print(
+            f"CUDA device {name!r} has compute capability {capability[0]}.{capability[1]}, "
+            f"but this PyTorch build supports only {supported}. Falling back to CPU. "
+            "Pass --device cuda to force CUDA after installing a compatible torch build."
+        )
+        return torch.device("cpu")
+    return torch.device("cuda")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--model", default=DEFAULT_MODEL)
@@ -312,6 +452,7 @@ def main() -> None:
     parser.add_argument("--sae-id", default=DEFAULT_SAE_ID)
     parser.add_argument("--neuronpedia-model", default=DEFAULT_NEURONPEDIA_MODEL)
     parser.add_argument("--neuronpedia-source", default=DEFAULT_NEURONPEDIA_SOURCE)
+    parser.add_argument("--neuronpedia-cache", default=None)
     parser.add_argument("--no-neuronpedia", action="store_true")
     parser.add_argument("--dataset", default=DEFAULT_DATASET)
     parser.add_argument("--language", default="en")
@@ -348,6 +489,8 @@ def main() -> None:
     parser.add_argument("--logic-print-every", type=int, default=25)
     args = parser.parse_args()
 
+    if args.neuronpedia_cache is None:
+        args.neuronpedia_cache = str(default_neuronpedia_cache_path(args.neuronpedia_model, args.neuronpedia_source))
     if args.out is None:
         args.out = default_output_path(args)
 
@@ -376,9 +519,10 @@ def main() -> None:
         )
 
     if discovery_cached is None or eval_cached is None:
+        disable_broken_torchvision_import()
         from transformers import AutoModelForCausalLM, AutoTokenizer
 
-        device = torch.device(args.device or ("cuda" if torch.cuda.is_available() else "cpu"))
+        device = choose_device(args.device)
         tokenizer = AutoTokenizer.from_pretrained(args.model)
         if tokenizer.pad_token is None:
             tokenizer.pad_token = tokenizer.eos_token
@@ -455,6 +599,7 @@ def main() -> None:
     or_metrics = binary_metrics(eval_labels, or_pred)
     metrics = or_metrics
     logic_result = None
+    neuronpedia_cache = load_neuronpedia_cache(args.neuronpedia_cache)
     if args.classifier == "difflogic":
         logic_result = train_difflogic_classifier(
             discovery_firing,
@@ -465,13 +610,27 @@ def main() -> None:
             args=args,
         )
         metrics = Metrics(**logic_result["eval_hard_metrics"])
+        attach_feature_meanings_to_logic_result(
+            logic_result,
+            features=features,
+            model_id=args.neuronpedia_model,
+            source=args.neuronpedia_source,
+            cache=neuronpedia_cache,
+        )
 
     print("selected features:")
     for f in features:
+        meaning = feature_meaning_lookup(
+            [f],
+            model_id=args.neuronpedia_model,
+            source=args.neuronpedia_source,
+            cache=neuronpedia_cache,
+        )[f.feature_id]
+        explanation = meaning.get("top_explanation") or "(no cached explanation)"
         print(
             f"  layer={f.layer} feature={f.feature_id} "
             f"delta={f.delta:.4f} toxic_rate={f.toxic_rate:.4f} clean_rate={f.clean_rate:.4f} "
-            f"https://www.neuronpedia.org/{args.neuronpedia_model}/{args.neuronpedia_source}/{f.feature_id}"
+            f"meaning={explanation!r} {meaning['neuronpedia_url']}"
         )
     print("or rule metrics:")
     print(json.dumps(asdict(or_metrics), indent=2))

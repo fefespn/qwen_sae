@@ -178,6 +178,91 @@ The selected Gemma features are saved with Neuronpedia URLs and, when available,
 ```text
 features[*].neuronpedia.neuronpedia_url
 features[*].neuronpedia.explanations
+logic_classifier.hard_circuit.feature_meanings
+```
+
+### Gemma Layer 20 Results
+
+These are the same experiment as below, but using Gemma Scope layer 20 residual SAE features with Neuronpedia meanings.
+
+| top-k | Hard Toxic Circuit | Accuracy | Precision | Recall | F1 | TP | FP | TN | FN |
+| ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 | `i1` | 0.829 | 0.756 | 0.972 | 0.850 | 486 | 157 | 343 | 14 |
+| 2 | `i1` | 0.829 | 0.756 | 0.972 | 0.850 | 486 | 157 | 343 | 14 |
+| 4 | `((i2 OR (i4 AND i3)) AND i1)` | 0.860 | 0.881 | 0.832 | 0.856 | 416 | 56 | 444 | 84 |
+| 8 | `(i1 AND ((i4 OR i2) OR i5))` | 0.889 | 0.864 | 0.924 | 0.893 | 462 | 73 | 427 | 38 |
+| 16 | `(i1 AND (i5 OR ((i2 OR i4) AND i1)))` | 0.889 | 0.864 | 0.924 | 0.893 | 462 | 73 | 427 | 38 |
+| 32 | `(i1 AND ((i9 OR i31) OR ((i8 OR i28) OR ((i15 OR i27) AND i1))))` | 0.869 | 0.835 | 0.920 | 0.875 | 460 | 91 | 409 | 40 |
+
+For comparison, the top-32 OR baseline on the same Gemma features was:
+
+```text
+Accuracy  0.527
+Precision 0.514
+Recall    1.000
+F1        0.679
+FP        473
+```
+
+The best Gemma binary hard circuit here was top-8/top-16:
+
+```text
+F1        0.893
+Accuracy  0.889
+Precision 0.864
+Recall    0.924
+```
+
+### Gemma Feature Meanings
+
+The Gemma Scope circuits use Neuronpedia explanations, so `i1`, `i2`, etc. can be read as interpretable feature meanings:
+
+| Input | SAE Feature | Meaning |
+| --- | ---: | --- |
+| `i1` | 13324 | expressions of strong emotions and expletives |
+| `i2` | 2746 | terms and concepts related to fraudulent activities, including various forms of fraud and deception |
+| `i3` | 7579 | expressions of frustration and criticism towards political figures or situations |
+| `i4` | 13135 | expressions of negativity or unfavorable situations |
+| `i5` | 6601 | references to physical attributes and sexually suggestive imagery |
+| `i6` | 5067 | phrases expressing skepticism or criticism of societal views and historical narratives |
+| `i7` | 14857 | words expressing strong opinions or calls to action |
+| `i8` | 3234 | specific references to criminal cases and legal terminology |
+| `i9` | 10122 | references to cyber threats and attacks, particularly involving hackers and malicious organizations |
+| `i10` | 14600 | instances of hypocrisy and contradictions in behavior or beliefs |
+| `i11` | 12566 | claims of entitlement and perceived superiority based on institutional affiliation |
+| `i12` | 4893 | references to violence and threats to safety |
+| `i13` | 16209 | expressions of urgency and frustration in informal communication |
+| `i14` | 807 | references to influential individuals and their actions or statements |
+| `i15` | 8837 | the names of large animals |
+| `i16` | 2438 | statements questioning the validity or reliability of claims |
+| `i17` | 3084 | negative emotional experiences and reactions related to personal experiences |
+| `i18` | 12042 | explicit descriptions of sexual interactions and actions |
+| `i19` | 11477 | text describing negative experiences and emotional distress |
+| `i20` | 10222 | references to legal terminology and issues related to reputation and defamation |
+| `i21` | 7077 | criticisms and discussions surrounding historical injustices related to slavery |
+| `i22` | 13243 | references to physical attributes and bodily sensations |
+| `i23` | 13736 | expressions related to perseverance and resilience |
+| `i24` | 12881 | instances of suggestion and influence in conversations |
+| `i25` | 12651 | expressions of emotional struggle and interpersonal conflict |
+| `i26` | 5808 | expressions of criticism directed at individuals or practices perceived as exploitative or unjust |
+| `i27` | 13829 | expressions of mental instability and emotions related to sanity |
+| `i28` | 14324 | terms related to dust and dirt in various contexts |
+| `i29` | 5400 | words related to fictional or mythical elements |
+| `i30` | 6073 | incidents related to legal enforcement or conflict situations |
+| `i31` | 12685 | references to violent actions and physical aggression |
+| `i32` | 11047 | references to control and obedience |
+
+For example, the top-8 Gemma hard circuit:
+
+```text
+toxic = i1 AND (i4 OR i2 OR i5)
+```
+
+can be read approximately as:
+
+```text
+toxic = expletive/strong-emotion feature
+        AND (negativity OR fraud/deception OR sexually suggestive/physical-attribute feature)
 ```
 
 ## Binary Toxic Circuit
