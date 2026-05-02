@@ -32,6 +32,20 @@ dataset: textdetox/multilingual_toxicity_dataset
 lang:    en
 ```
 
+The difflogic classifier depends on the local sibling checkout:
+
+```text
+difflogic/
+```
+
+The script imports it through `--difflogic-path`, defaulting to that local checkout. Because `difflogic` is its own git repository, the cleanest reproducible setup is to pin it as a dependency, for example as a git submodule:
+
+```bash
+git submodule add https://github.com/Felix-Petersen/difflogic difflogic
+```
+
+In this workspace we used the local CPU/Python implementation. That avoids needing the CUDA extension for these tiny Boolean circuits.
+
 The script collects example-level SAE feature firing:
 
 ```text
@@ -45,6 +59,19 @@ qwen/out/firing_cache/
 ```
 
 The cache key excludes `--top-k-features`, so top-2/top-4/top-8/top-16/top-32 sweeps reuse the same firing tensors when the dataset, layer, model, SAE, seed, max length, and epsilon match.
+
+## Dataset Examples
+
+A few raw English examples from `textdetox/multilingual_toxicity_dataset`:
+
+| Label | Text |
+| --- | --- |
+| clean | The trans women reading this tweet right now is beautiful |
+| clean | Hero Rohit Sharma love From Pakistan |
+| toxic | Females are stupid dumb and ready to do anything for fucking clout |
+
+The dataset contains social-media style text, so some toxic examples include offensive language.
+
 
 ## Paper-Style Baseline
 
