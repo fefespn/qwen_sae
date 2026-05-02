@@ -265,6 +265,67 @@ toxic = expletive/strong-emotion feature
         AND (negativity OR fraud/deception OR sexually suggestive/physical-attribute feature)
 ```
 
+### Gemma Top-8 Error Analysis
+
+To understand *why* the top-8 Gemma circuit gets things wrong, we picked 5 false negatives and 5 false positives from the eval split and looked at which of the 8 inputs fired on each example. The analysis script is:
+
+```text
+qwen/analyze_gemma_top8_errors.py
+```
+
+The circuit under test is `i1 AND (i2 OR i4 OR i5)`, where:
+
+- `i1` (13324) = strong emotions / expletives — the **gate** of the AND
+- `i2` (2746) = fraud / deception
+- `i4` (13135) = negativity / unfavorable situations
+- `i5` (6601) = physical attributes / sexually suggestive imagery
+
+#### What the 5 FN + 5 FP show
+
+**FN (38 total, sampled 5) — circuit said *clean* but text was toxic:**
+
+| # | Text (truncated) | i1 | i2 | i4 | i5 | Why it failed |
+| ---: | --- | :---: | :---: | :---: | :---: | --- |
+| 1 | "I don't want to get to know another n****." | 0 | 0 | 0 | 0 | **i1 didn't fire on the slur** — AND short-circuits |
+| 2 | "The tape gag will muffle your cries when you cum!" | 0 | 1 | 0 | 0 | **i1 OFF** — explicit content but no expletive feature |
+| 3 | "We're going to gather up ALL of your guns, melt them down…" (threat to Hillary) | 1 | 0 | 0 | 0 | i1 ON, but **none of the OR-side fired**. Look: `r12` (violence/threats) **did** fire — it's just not in our 8 inputs |
+| 4 | "…socialist latino cess pool…" | 1 | 0 | 0 | 0 | Same as #3 — i1 ON, OR-side empty |
+| 5 | "Sucking a big black c*** makes you more attractive" | 0 | 0 | 1 | 1 | **i1 OFF again** despite explicit slur |
+
+**FP (73 total, sampled 5) — circuit said *toxic* but text was clean:**
+
+| # | Text (truncated) | i1 | i2 | i4 | i5 | Why it failed |
+| ---: | --- | :---: | :---: | :---: | :---: | --- |
+| 1 | "Im gay and I approve this message" | 1 | 1 | 0 | 0 | **i2 (fraud) fires on benign LGBT identity** |
+| 2 | "im a simple lesbian. i see a bishounen…" | 1 | 1 | 0 | 1 | i2 **and** i5 fire on identity / aesthetic content |
+| 3 | "Italian is so Asian… They all like Asian grandpa…" | 1 | 0 | 1 | 0 | i4 (negativity) fires, but text is positive ("Love love") |
+| 4 | "obsession to oppress the girl child is sickening!" | 1 | 1 | 1 | 0 | Anti-misogyny statement → looks toxic by content. **Probably mislabeled in the dataset** |
+| 5 | "Happy pride month here's an important message from these gays" | 1 | 1 | 0 | 0 | Same i2 LGBT-identity miscall as #1 |
+
+#### Findings — two hypotheses, both confirmed
+
+**"Maybe the feature didn't blow up when it needs to"** — yes, this is the dominant FN failure mode:
+
+- `i1` misses slurs and explicit profanity (FN#1, #2, #5). The Neuronpedia label says *"strong emotions and expletives"*, but in practice it does not fire on every slur — it seems to need a stronger emotional/expletive context.
+- For FN#3 and #4 the *right* feature (`r12` = SAE 4893, *"references to violence and threats to safety"*, or `r31` = 12685, *"violent actions and physical aggression"*) **does fire** — it just wasn't selected into `i1..i8` because its delta ranks 12th rather than top-8.
+
+**"Maybe our equation is not right"** — yes, this is the dominant FP failure mode:
+
+- `i2` (*"fraud/deception"*) is the leakiest gate. It fires on `gay`, `lesbian`, `pride` — possibly because Neuronpedia's automatic explanation is wrong/incomplete, or because the feature is polysemantic. 4 of 5 FPs go through `i2`.
+- `i4` (*"negativity"*) also leaks on neutral-but-emotional language (FP#3).
+
+The full per-example dump (text, all 8 input firings, and which of the top-50 ranked features fired) is saved at:
+
+```text
+qwen/out/gemma_top8_error_analysis.txt
+```
+
+To regenerate or sample more examples:
+
+```bash
+qwen/.venv/bin/python qwen/analyze_gemma_top8_errors.py --n-fn 20 --n-fp 20
+```
+
 ## Binary Toxic Circuit
 
 The difflogic experiment uses a **single hard binary toxic circuit**:

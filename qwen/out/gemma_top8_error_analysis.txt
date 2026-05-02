@@ -1,0 +1,315 @@
+Circuit JSON: /mnt/central/users/fspanioli/projects/logic_nn/qwen/out/gemma_scope_layer20_en_top8_difflogic.json
+Hard circuit: (i1 AND ((i4 OR i2) OR i5))
+Inputs (feature_ids): [13324, 2746, 7579, 13135, 6601, 5067, 14857, 3234]
+
+Input -> SAE feature -> meaning
+  i1  = 13324  | delta=+0.665  toxic_rate=0.978  clean_rate=0.312
+          meaning: expressions of strong emotions and expletives
+  i2  =  2746  | delta=+0.576  toxic_rate=0.756  clean_rate=0.179
+          meaning: terms and concepts related to fraudulent activities, including various forms of fraud and deception
+  i3  =  7579  | delta=+0.560  toxic_rate=0.923  clean_rate=0.363
+          meaning: expressions of frustration and criticism towards political figures or situations
+  i4  = 13135  | delta=+0.558  toxic_rate=0.669  clean_rate=0.112
+          meaning: expressions of negativity or unfavorable situations
+  i5  =  6601  | delta=+0.541  toxic_rate=0.622  clean_rate=0.080
+          meaning: references to physical attributes and sexually suggestive imagery
+  i6  =  5067  | delta=+0.454  toxic_rate=0.706  clean_rate=0.253
+          meaning: phrases expressing skepticism or criticism of societal views and historical narratives
+  i7  = 14857  | delta=+0.436  toxic_rate=0.776  clean_rate=0.340
+          meaning: words expressing strong opinions or calls to action
+  i8  =  3234  | delta=+0.414  toxic_rate=0.572  clean_rate=0.158
+          meaning: specific references to criminal cases and legal terminology
+
+Firing cache: /mnt/central/users/fspanioli/projects/logic_nn/qwen/out/firing_cache/gemma_scope_layer20_en_eval_firing_3a4272ece97d9021.pt
+  N=1000  sae_features=16384  toxic=500
+
+Confusion: TP=462  FP=73  TN=427  FN=38
+
+FN pool: 38  FP pool: 73
+
+====================================================================================================
+FN  (n=5)
+====================================================================================================
+
+[FN #1]  eval_idx=11  gold=toxic  pred=clean
+text:
+I don't want to get to know another nigga.
+top-8 ON : ['i3', 'i6']
+top-8 OFF: ['i1', 'i2', 'i4', 'i5', 'i7', 'i8']
+why FN  : i1 (expletive/strong-emotion gate) is OFF -> AND short-circuits to 0
+top-50 ranked features that fired (14; '*' = also in top-8 inputs):
+  * r3  fid= 7579  delta=+0.560  expressions of frustration and criticism towards political figures or situations
+  * r6  fid= 5067  delta=+0.454  phrases expressing skepticism or criticism of societal views and historical narratives
+    r9  fid=10122  delta=+0.407  references to cyber threats and attacks, particularly involving hackers and malicious organizations
+    r10 fid=14600  delta=+0.381  instances of hypocrisy and contradictions in behavior or beliefs
+    r11 fid=12566  delta=+0.377  claims of entitlement and perceived superiority based on institutional affiliation
+    r15 fid= 8837  delta=+0.354  the names of large animals.
+
+    r18 fid=12042  delta=+0.317  explicit descriptions of sexual interactions and actions
+    r20 fid=10222  delta=+0.312  references to legal terminology and issues related to reputation and defamation
+    r24 fid=13736  delta=+0.288  expressions related to perseverance and resilience
+    r25 fid=12651  delta=+0.273  expressions of emotional struggle and interpersonal conflict
+    r40 fid=15925  delta=+0.216  references to personal identity or self-description
+    r44 fid= 6385  delta=+0.213  emotional expressions and reactions in conversations
+    r45 fid=15120  delta=+0.209  informal expressions or phrases indicating condition or reason
+    r47 fid=11921  delta=+0.208  verbal expressions of obligation or necessity
+
+[FN #2]  eval_idx=23  gold=toxic  pred=clean
+text:
+The tape gag will muffle your cries when you cum!
+top-8 ON : ['i2', 'i3']
+top-8 OFF: ['i1', 'i4', 'i5', 'i6', 'i7', 'i8']
+why FN  : i1 (expletive/strong-emotion gate) is OFF -> AND short-circuits to 0
+top-50 ranked features that fired (15; '*' = also in top-8 inputs):
+  * r2  fid= 2746  delta=+0.576  terms and concepts related to fraudulent activities, including various forms of fraud and deception
+  * r3  fid= 7579  delta=+0.560  expressions of frustration and criticism towards political figures or situations
+    r18 fid=12042  delta=+0.317  explicit descriptions of sexual interactions and actions
+    r23 fid=12881  delta=+0.288  instances of suggestion and influence in conversations
+    r24 fid=13736  delta=+0.288  expressions related to perseverance and resilience
+    r25 fid=12651  delta=+0.273  expressions of emotional struggle and interpersonal conflict
+    r29 fid= 5400  delta=+0.259  words related to fictional or mythical elements
+    r37 fid=13064  delta=+0.226  descriptions of video game features and player experiences
+    r38 fid=13710  delta=+0.226  elements related to humor and irony in storytelling
+    r39 fid= 8807  delta=+0.225  emotional and physical expressions related to speaking or the mouth
+    r44 fid= 6385  delta=+0.213  emotional expressions and reactions in conversations
+    r46 fid= 2707  delta=+0.208  narratives involving conflict and power dynamics among characters
+    r47 fid=11921  delta=+0.208  verbal expressions of obligation or necessity
+    r49 fid=15644  delta=+0.206  phrases indicating legal actions and outcomes
+    r50 fid= 4039  delta=+0.205  physical items and components in various contexts
+
+[FN #3]  eval_idx=37  gold=toxic  pred=clean
+text:
+We’re going to gather up ALL of your guns, melt them down and turn them into a gargantuan metal
+mountain emblazoned with the face of Hillary Clinton.
+top-8 ON : ['i1', 'i3', 'i8']
+top-8 OFF: ['i2', 'i4', 'i5', 'i6', 'i7']
+why FN  : i1 is ON but none of i2/i4/i5 (negativity/fraud/sexual) fired
+top-50 ranked features that fired (28; '*' = also in top-8 inputs):
+  * r1  fid=13324  delta=+0.665  expressions of strong emotions and expletives
+  * r3  fid= 7579  delta=+0.560  expressions of frustration and criticism towards political figures or situations
+  * r8  fid= 3234  delta=+0.414  specific references to criminal cases and legal terminology
+    r9  fid=10122  delta=+0.407  references to cyber threats and attacks, particularly involving hackers and malicious organizations
+    r10 fid=14600  delta=+0.381  instances of hypocrisy and contradictions in behavior or beliefs
+    r12 fid= 4893  delta=+0.361  references to violence and threats to safety
+    r13 fid=16209  delta=+0.360  expressions of urgency and frustration in informal communication
+    r14 fid=  807  delta=+0.356  references to influential individuals and their actions or statements
+    r15 fid= 8837  delta=+0.354  the names of large animals.
+
+    r17 fid= 3084  delta=+0.329  negative emotional experiences and reactions related to personal experiences
+    r18 fid=12042  delta=+0.317  explicit descriptions of sexual interactions and actions
+    r19 fid=11477  delta=+0.315  text describing negative experiences and emotional distress
+    r21 fid= 7077  delta=+0.308  criticisms and discussions surrounding historical injustices related to slavery
+    r22 fid=13243  delta=+0.307  references to physical attributes and bodily sensations
+    r23 fid=12881  delta=+0.288  instances of suggestion and influence in conversations
+    r27 fid=13829  delta=+0.267   expressions of mental instability and emotions related to sanity
+    r32 fid=11047  delta=+0.250  references to control and obedience
+    r34 fid= 8181  delta=+0.236   verbs related to actions of changing state or control
+    r35 fid= 1794  delta=+0.234   anatomical terms related to body parts and injuries
+    r36 fid=12051  delta=+0.232  elements related to fantasy and magical themes
+    r37 fid=13064  delta=+0.226  descriptions of video game features and player experiences
+    r43 fid= 5196  delta=+0.213  similes or comparisons involving "like" or "as"
+    r44 fid= 6385  delta=+0.213  emotional expressions and reactions in conversations
+    r45 fid=15120  delta=+0.209  informal expressions or phrases indicating condition or reason
+    r46 fid= 2707  delta=+0.208  narratives involving conflict and power dynamics among characters
+    r47 fid=11921  delta=+0.208  verbal expressions of obligation or necessity
+    r49 fid=15644  delta=+0.206  phrases indicating legal actions and outcomes
+    r50 fid= 4039  delta=+0.205  physical items and components in various contexts
+
+[FN #4]  eval_idx=52  gold=toxic  pred=clean
+text:
+I take solice in the knowledge that your kind will be dead soon enough, and hopefully the country
+won't have turned into a socialist latino cess pool by then.
+top-8 ON : ['i1', 'i3', 'i6', 'i7', 'i8']
+top-8 OFF: ['i2', 'i4', 'i5']
+why FN  : i1 is ON but none of i2/i4/i5 (negativity/fraud/sexual) fired
+top-50 ranked features that fired (29; '*' = also in top-8 inputs):
+  * r1  fid=13324  delta=+0.665  expressions of strong emotions and expletives
+  * r3  fid= 7579  delta=+0.560  expressions of frustration and criticism towards political figures or situations
+  * r6  fid= 5067  delta=+0.454  phrases expressing skepticism or criticism of societal views and historical narratives
+  * r7  fid=14857  delta=+0.436  words expressing strong opinions or calls to action
+  * r8  fid= 3234  delta=+0.414  specific references to criminal cases and legal terminology
+    r10 fid=14600  delta=+0.381  instances of hypocrisy and contradictions in behavior or beliefs
+    r13 fid=16209  delta=+0.360  expressions of urgency and frustration in informal communication
+    r14 fid=  807  delta=+0.356  references to influential individuals and their actions or statements
+    r16 fid= 2438  delta=+0.345  statements questioning the validity or reliability of claims
+    r17 fid= 3084  delta=+0.329  negative emotional experiences and reactions related to personal experiences
+    r19 fid=11477  delta=+0.315  text describing negative experiences and emotional distress
+    r20 fid=10222  delta=+0.312  references to legal terminology and issues related to reputation and defamation
+    r21 fid= 7077  delta=+0.308  criticisms and discussions surrounding historical injustices related to slavery
+    r23 fid=12881  delta=+0.288  instances of suggestion and influence in conversations
+    r27 fid=13829  delta=+0.267   expressions of mental instability and emotions related to sanity
+    r29 fid= 5400  delta=+0.259  words related to fictional or mythical elements
+    r32 fid=11047  delta=+0.250  references to control and obedience
+    r33 fid= 2916  delta=+0.249  references to technology and its implications
+    r34 fid= 8181  delta=+0.236   verbs related to actions of changing state or control
+    r36 fid=12051  delta=+0.232  elements related to fantasy and magical themes
+    r37 fid=13064  delta=+0.226  descriptions of video game features and player experiences
+    r40 fid=15925  delta=+0.216  references to personal identity or self-description
+    r42 fid=15753  delta=+0.214  instances of the word "the" and expressions of strong emotions or frustrations
+    r43 fid= 5196  delta=+0.213  similes or comparisons involving "like" or "as"
+    r44 fid= 6385  delta=+0.213  emotional expressions and reactions in conversations
+    r46 fid= 2707  delta=+0.208  narratives involving conflict and power dynamics among characters
+    r47 fid=11921  delta=+0.208  verbal expressions of obligation or necessity
+    r48 fid=  818  delta=+0.206  terms related to waste management and disposal
+    r49 fid=15644  delta=+0.206  phrases indicating legal actions and outcomes
+
+[FN #5]  eval_idx=63  gold=toxic  pred=clean
+text:
+Sucking a big black cock makes you more attractive URL
+top-8 ON : ['i3', 'i4', 'i5']
+top-8 OFF: ['i1', 'i2', 'i6', 'i7', 'i8']
+why FN  : i1 (expletive/strong-emotion gate) is OFF -> AND short-circuits to 0
+top-50 ranked features that fired (18; '*' = also in top-8 inputs):
+  * r3  fid= 7579  delta=+0.560  expressions of frustration and criticism towards political figures or situations
+  * r4  fid=13135  delta=+0.558  expressions of negativity or unfavorable situations
+  * r5  fid= 6601  delta=+0.541  references to physical attributes and sexually suggestive imagery
+    r10 fid=14600  delta=+0.381  instances of hypocrisy and contradictions in behavior or beliefs
+    r12 fid= 4893  delta=+0.361  references to violence and threats to safety
+    r14 fid=  807  delta=+0.356  references to influential individuals and their actions or statements
+    r15 fid= 8837  delta=+0.354  the names of large animals.
+
+    r18 fid=12042  delta=+0.317  explicit descriptions of sexual interactions and actions
+    r22 fid=13243  delta=+0.307  references to physical attributes and bodily sensations
+    r25 fid=12651  delta=+0.273  expressions of emotional struggle and interpersonal conflict
+    r31 fid=12685  delta=+0.255   references to violent actions and physical aggression
+    r32 fid=11047  delta=+0.250  references to control and obedience
+    r35 fid= 1794  delta=+0.234   anatomical terms related to body parts and injuries
+    r39 fid= 8807  delta=+0.225  emotional and physical expressions related to speaking or the mouth
+    r41 fid= 7060  delta=+0.215  adjectives associated with descriptions of food and culinary experiences
+    r43 fid= 5196  delta=+0.213  similes or comparisons involving "like" or "as"
+    r47 fid=11921  delta=+0.208  verbal expressions of obligation or necessity
+    r50 fid= 4039  delta=+0.205  physical items and components in various contexts
+
+====================================================================================================
+FP  (n=5)
+====================================================================================================
+
+[FP #1]  eval_idx=0  gold=clean  pred=toxic
+text:
+Im gay and I approve this message
+top-8 ON : ['i1', 'i2']
+top-8 OFF: ['i3', 'i4', 'i5', 'i6', 'i7', 'i8']
+why FP  : i1=ON AND OR-side fired via ['i2'] despite clean gold label
+top-50 ranked features that fired (12; '*' = also in top-8 inputs):
+  * r1  fid=13324  delta=+0.665  expressions of strong emotions and expletives
+  * r2  fid= 2746  delta=+0.576  terms and concepts related to fraudulent activities, including various forms of fraud and deception
+    r10 fid=14600  delta=+0.381  instances of hypocrisy and contradictions in behavior or beliefs
+    r18 fid=12042  delta=+0.317  explicit descriptions of sexual interactions and actions
+    r21 fid= 7077  delta=+0.308  criticisms and discussions surrounding historical injustices related to slavery
+    r27 fid=13829  delta=+0.267   expressions of mental instability and emotions related to sanity
+    r33 fid= 2916  delta=+0.249  references to technology and its implications
+    r37 fid=13064  delta=+0.226  descriptions of video game features and player experiences
+    r40 fid=15925  delta=+0.216  references to personal identity or self-description
+    r45 fid=15120  delta=+0.209  informal expressions or phrases indicating condition or reason
+    r47 fid=11921  delta=+0.208  verbal expressions of obligation or necessity
+    r50 fid= 4039  delta=+0.205  physical items and components in various contexts
+
+[FP #2]  eval_idx=8  gold=clean  pred=toxic
+text:
+im a simple lesbian. i see a bishounen, i want to be them
+top-8 ON : ['i1', 'i2', 'i3', 'i5']
+top-8 OFF: ['i4', 'i6', 'i7', 'i8']
+why FP  : i1=ON AND OR-side fired via ['i2', 'i5'] despite clean gold label
+top-50 ranked features that fired (23; '*' = also in top-8 inputs):
+  * r1  fid=13324  delta=+0.665  expressions of strong emotions and expletives
+  * r2  fid= 2746  delta=+0.576  terms and concepts related to fraudulent activities, including various forms of fraud and deception
+  * r3  fid= 7579  delta=+0.560  expressions of frustration and criticism towards political figures or situations
+  * r5  fid= 6601  delta=+0.541  references to physical attributes and sexually suggestive imagery
+    r10 fid=14600  delta=+0.381  instances of hypocrisy and contradictions in behavior or beliefs
+    r13 fid=16209  delta=+0.360  expressions of urgency and frustration in informal communication
+    r15 fid= 8837  delta=+0.354  the names of large animals.
+
+    r18 fid=12042  delta=+0.317  explicit descriptions of sexual interactions and actions
+    r20 fid=10222  delta=+0.312  references to legal terminology and issues related to reputation and defamation
+    r23 fid=12881  delta=+0.288  instances of suggestion and influence in conversations
+    r25 fid=12651  delta=+0.273  expressions of emotional struggle and interpersonal conflict
+    r29 fid= 5400  delta=+0.259  words related to fictional or mythical elements
+    r30 fid= 6073  delta=+0.257  incidents related to legal enforcement or conflict situations
+    r33 fid= 2916  delta=+0.249  references to technology and its implications
+    r37 fid=13064  delta=+0.226  descriptions of video game features and player experiences
+    r39 fid= 8807  delta=+0.225  emotional and physical expressions related to speaking or the mouth
+    r40 fid=15925  delta=+0.216  references to personal identity or self-description
+    r41 fid= 7060  delta=+0.215  adjectives associated with descriptions of food and culinary experiences
+    r42 fid=15753  delta=+0.214  instances of the word "the" and expressions of strong emotions or frustrations
+    r44 fid= 6385  delta=+0.213  emotional expressions and reactions in conversations
+    r45 fid=15120  delta=+0.209  informal expressions or phrases indicating condition or reason
+    r46 fid= 2707  delta=+0.208  narratives involving conflict and power dynamics among characters
+    r47 fid=11921  delta=+0.208  verbal expressions of obligation or necessity
+
+[FP #3]  eval_idx=30  gold=clean  pred=toxic
+text:
+Italian is so Asian, that's what my USA and his Italian said about. They all like Asian grandpa and
+Grandma. Love love
+top-8 ON : ['i1', 'i3', 'i4', 'i6']
+top-8 OFF: ['i2', 'i5', 'i7', 'i8']
+why FP  : i1=ON AND OR-side fired via ['i4'] despite clean gold label
+top-50 ranked features that fired (18; '*' = also in top-8 inputs):
+  * r1  fid=13324  delta=+0.665  expressions of strong emotions and expletives
+  * r3  fid= 7579  delta=+0.560  expressions of frustration and criticism towards political figures or situations
+  * r4  fid=13135  delta=+0.558  expressions of negativity or unfavorable situations
+  * r6  fid= 5067  delta=+0.454  phrases expressing skepticism or criticism of societal views and historical narratives
+    r10 fid=14600  delta=+0.381  instances of hypocrisy and contradictions in behavior or beliefs
+    r11 fid=12566  delta=+0.377  claims of entitlement and perceived superiority based on institutional affiliation
+    r15 fid= 8837  delta=+0.354  the names of large animals.
+
+    r17 fid= 3084  delta=+0.329  negative emotional experiences and reactions related to personal experiences
+    r18 fid=12042  delta=+0.317  explicit descriptions of sexual interactions and actions
+    r21 fid= 7077  delta=+0.308  criticisms and discussions surrounding historical injustices related to slavery
+    r23 fid=12881  delta=+0.288  instances of suggestion and influence in conversations
+    r26 fid= 5808  delta=+0.269  expressions of criticism directed at individuals or practices perceived as exploitative or unjust
+    r29 fid= 5400  delta=+0.259  words related to fictional or mythical elements
+    r33 fid= 2916  delta=+0.249  references to technology and its implications
+    r37 fid=13064  delta=+0.226  descriptions of video game features and player experiences
+    r38 fid=13710  delta=+0.226  elements related to humor and irony in storytelling
+    r44 fid= 6385  delta=+0.213  emotional expressions and reactions in conversations
+    r47 fid=11921  delta=+0.208  verbal expressions of obligation or necessity
+
+[FP #4]  eval_idx=75  gold=clean  pred=toxic
+text:
+Me neither...this obsession to oppress the girl child is sickening!
+top-8 ON : ['i1', 'i2', 'i3', 'i4', 'i6', 'i7']
+top-8 OFF: ['i5', 'i8']
+why FP  : i1=ON AND OR-side fired via ['i2', 'i4'] despite clean gold label
+top-50 ranked features that fired (22; '*' = also in top-8 inputs):
+  * r1  fid=13324  delta=+0.665  expressions of strong emotions and expletives
+  * r2  fid= 2746  delta=+0.576  terms and concepts related to fraudulent activities, including various forms of fraud and deception
+  * r3  fid= 7579  delta=+0.560  expressions of frustration and criticism towards political figures or situations
+  * r4  fid=13135  delta=+0.558  expressions of negativity or unfavorable situations
+  * r6  fid= 5067  delta=+0.454  phrases expressing skepticism or criticism of societal views and historical narratives
+  * r7  fid=14857  delta=+0.436  words expressing strong opinions or calls to action
+    r10 fid=14600  delta=+0.381  instances of hypocrisy and contradictions in behavior or beliefs
+    r11 fid=12566  delta=+0.377  claims of entitlement and perceived superiority based on institutional affiliation
+    r12 fid= 4893  delta=+0.361  references to violence and threats to safety
+    r13 fid=16209  delta=+0.360  expressions of urgency and frustration in informal communication
+    r14 fid=  807  delta=+0.356  references to influential individuals and their actions or statements
+    r20 fid=10222  delta=+0.312  references to legal terminology and issues related to reputation and defamation
+    r21 fid= 7077  delta=+0.308  criticisms and discussions surrounding historical injustices related to slavery
+    r22 fid=13243  delta=+0.307  references to physical attributes and bodily sensations
+    r26 fid= 5808  delta=+0.269  expressions of criticism directed at individuals or practices perceived as exploitative or unjust
+    r27 fid=13829  delta=+0.267   expressions of mental instability and emotions related to sanity
+    r37 fid=13064  delta=+0.226  descriptions of video game features and player experiences
+    r38 fid=13710  delta=+0.226  elements related to humor and irony in storytelling
+    r44 fid= 6385  delta=+0.213  emotional expressions and reactions in conversations
+    r45 fid=15120  delta=+0.209  informal expressions or phrases indicating condition or reason
+    r46 fid= 2707  delta=+0.208  narratives involving conflict and power dynamics among characters
+    r47 fid=11921  delta=+0.208  verbal expressions of obligation or necessity
+
+[FP #5]  eval_idx=85  gold=clean  pred=toxic
+text:
+Happy pride month here's an important message from these gays URL
+top-8 ON : ['i1', 'i2', 'i3']
+top-8 OFF: ['i4', 'i5', 'i6', 'i7', 'i8']
+why FP  : i1=ON AND OR-side fired via ['i2'] despite clean gold label
+top-50 ranked features that fired (12; '*' = also in top-8 inputs):
+  * r1  fid=13324  delta=+0.665  expressions of strong emotions and expletives
+  * r2  fid= 2746  delta=+0.576  terms and concepts related to fraudulent activities, including various forms of fraud and deception
+  * r3  fid= 7579  delta=+0.560  expressions of frustration and criticism towards political figures or situations
+    r13 fid=16209  delta=+0.360  expressions of urgency and frustration in informal communication
+    r14 fid=  807  delta=+0.356  references to influential individuals and their actions or statements
+    r23 fid=12881  delta=+0.288  instances of suggestion and influence in conversations
+    r33 fid= 2916  delta=+0.249  references to technology and its implications
+    r37 fid=13064  delta=+0.226  descriptions of video game features and player experiences
+    r40 fid=15925  delta=+0.216  references to personal identity or self-description
+    r41 fid= 7060  delta=+0.215  adjectives associated with descriptions of food and culinary experiences
+    r44 fid= 6385  delta=+0.213  emotional expressions and reactions in conversations
+    r50 fid= 4039  delta=+0.205  physical items and components in various contexts
