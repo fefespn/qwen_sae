@@ -1,0 +1,1966 @@
+{
+  "method": "gemma_scope_sae_toxicity_classifier",
+  "model": "google/gemma-2-2b",
+  "sae_release": "gemma-scope-2b-pt-res-canonical",
+  "sae_id": "layer_20/width_16k/canonical",
+  "neuronpedia_model": "gemma-2-2b",
+  "neuronpedia_source": "20-gemmascope-res-16k",
+  "neuronpedia_cache": "/mnt/central/users/fspanioli/projects/logic_nn/qwen/out/neuronpedia_cache/gemma-2-2b__20-gemmascope-res-16k.json",
+  "layer": 20,
+  "top_k_features": 2,
+  "epsilon": 0.0,
+  "language": "en",
+  "dataset": "textdetox/multilingual_toxicity_dataset",
+  "text_key": "text",
+  "label_key": "toxic",
+  "classifier": "difflogic",
+  "features": [
+    {
+      "layer": 20,
+      "feature_id": 13324,
+      "delta": 0.6650000214576721,
+      "toxic_rate": 0.9775000214576721,
+      "clean_rate": 0.3125,
+      "toxic_count": 1955,
+      "clean_count": 625,
+      "n_toxic": 2000,
+      "n_clean": 2000,
+      "neuronpedia": {
+        "feature_id": 13324,
+        "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/13324",
+        "explanations": [
+          {
+            "text": "expressions of strong emotions and expletives",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "Insults and profanity",
+            "type": "np_acts-logits-general",
+            "score": null
+          },
+          {
+            "text": "calling someone filthy or worthless",
+            "type": "np_acts-logits-general",
+            "score": null
+          }
+        ]
+      }
+    },
+    {
+      "layer": 20,
+      "feature_id": 2746,
+      "delta": 0.5764999985694885,
+      "toxic_rate": 0.7559999823570251,
+      "clean_rate": 0.17949999868869781,
+      "toxic_count": 1512,
+      "clean_count": 359,
+      "n_toxic": 2000,
+      "n_clean": 2000,
+      "neuronpedia": {
+        "feature_id": 2746,
+        "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/2746",
+        "explanations": [
+          {
+            "text": "terms and concepts related to fraudulent activities, including various forms of fraud and deception",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "Sentences containing the word \"fraud.\"",
+            "type": "np_acts-logits-general",
+            "score": null
+          },
+          {
+            "text": "fraud and scams",
+            "type": "np_acts-logits-general",
+            "score": null
+          }
+        ]
+      }
+    }
+  ],
+  "ranked_features": [
+    {
+      "layer": 20,
+      "feature_id": 13324,
+      "delta": 0.6650000214576721,
+      "toxic_rate": 0.9775000214576721,
+      "clean_rate": 0.3125,
+      "toxic_count": 1955,
+      "clean_count": 625,
+      "n_toxic": 2000,
+      "n_clean": 2000,
+      "neuronpedia": {
+        "feature_id": 13324,
+        "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/13324",
+        "explanations": [
+          {
+            "text": "expressions of strong emotions and expletives",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "Insults and profanity",
+            "type": "np_acts-logits-general",
+            "score": null
+          },
+          {
+            "text": "calling someone filthy or worthless",
+            "type": "np_acts-logits-general",
+            "score": null
+          }
+        ]
+      }
+    },
+    {
+      "layer": 20,
+      "feature_id": 2746,
+      "delta": 0.5764999985694885,
+      "toxic_rate": 0.7559999823570251,
+      "clean_rate": 0.17949999868869781,
+      "toxic_count": 1512,
+      "clean_count": 359,
+      "n_toxic": 2000,
+      "n_clean": 2000,
+      "neuronpedia": {
+        "feature_id": 2746,
+        "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/2746",
+        "explanations": [
+          {
+            "text": "terms and concepts related to fraudulent activities, including various forms of fraud and deception",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "Sentences containing the word \"fraud.\"",
+            "type": "np_acts-logits-general",
+            "score": null
+          },
+          {
+            "text": "fraud and scams",
+            "type": "np_acts-logits-general",
+            "score": null
+          }
+        ]
+      }
+    },
+    {
+      "layer": 20,
+      "feature_id": 7579,
+      "delta": 0.559999942779541,
+      "toxic_rate": 0.9229999780654907,
+      "clean_rate": 0.3630000054836273,
+      "toxic_count": 1846,
+      "clean_count": 726,
+      "n_toxic": 2000,
+      "n_clean": 2000,
+      "neuronpedia": {
+        "feature_id": 7579,
+        "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/7579",
+        "explanations": [
+          {
+            "text": "expressions of frustration and criticism towards political figures or situations",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "Profanity after articles or pronouns",
+            "type": "np_acts-logits-general",
+            "score": null
+          },
+          {
+            "text": "swear words and insults",
+            "type": "np_acts-logits-general",
+            "score": null
+          }
+        ]
+      }
+    },
+    {
+      "layer": 20,
+      "feature_id": 13135,
+      "delta": 0.5575000047683716,
+      "toxic_rate": 0.6690000295639038,
+      "clean_rate": 0.11150000244379044,
+      "toxic_count": 1338,
+      "clean_count": 223,
+      "n_toxic": 2000,
+      "n_clean": 2000,
+      "neuronpedia": {
+        "feature_id": 13135,
+        "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/13135",
+        "explanations": [
+          {
+            "text": "expressions of negativity or unfavorable situations",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "Negative sentiment",
+            "type": "np_acts-logits-general",
+            "score": null
+          },
+          {
+            "text": "sadness and negative events",
+            "type": "np_acts-logits-general",
+            "score": null
+          }
+        ]
+      }
+    },
+    {
+      "layer": 20,
+      "feature_id": 6601,
+      "delta": 0.5410000085830688,
+      "toxic_rate": 0.6215000152587891,
+      "clean_rate": 0.08049999922513962,
+      "toxic_count": 1243,
+      "clean_count": 161,
+      "n_toxic": 2000,
+      "n_clean": 2000,
+      "neuronpedia": {
+        "feature_id": 6601,
+        "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/6601",
+        "explanations": [
+          {
+            "text": "references to physical attributes and sexually suggestive imagery",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "relating to buttocks and genitals",
+            "type": "np_acts-logits-general",
+            "score": null
+          },
+          {
+            "text": "body parts and genitalia",
+            "type": "np_acts-logits-general",
+            "score": null
+          }
+        ]
+      }
+    },
+    {
+      "layer": 20,
+      "feature_id": 5067,
+      "delta": 0.45350000262260437,
+      "toxic_rate": 0.7064999938011169,
+      "clean_rate": 0.2529999911785126,
+      "toxic_count": 1413,
+      "clean_count": 506,
+      "n_toxic": 2000,
+      "n_clean": 2000,
+      "neuronpedia": {
+        "feature_id": 5067,
+        "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/5067",
+        "explanations": [
+          {
+            "text": "phrases expressing skepticism or criticism of societal views and historical narratives",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "Following personal pronouns",
+            "type": "np_acts-logits-general",
+            "score": null
+          },
+          {
+            "text": "blaming, arrogance, and moralizing",
+            "type": "np_acts-logits-general",
+            "score": null
+          }
+        ]
+      }
+    },
+    {
+      "layer": 20,
+      "feature_id": 14857,
+      "delta": 0.4359999895095825,
+      "toxic_rate": 0.7764999866485596,
+      "clean_rate": 0.34049999713897705,
+      "toxic_count": 1553,
+      "clean_count": 681,
+      "n_toxic": 2000,
+      "n_clean": 2000,
+      "neuronpedia": {
+        "feature_id": 14857,
+        "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/14857",
+        "explanations": [
+          {
+            "text": "words expressing strong opinions or calls to action",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "Imperative verbs following \"to\"",
+            "type": "np_acts-logits-general",
+            "score": null
+          },
+          {
+            "text": "stop or shut",
+            "type": "np_acts-logits-general",
+            "score": null
+          }
+        ]
+      }
+    },
+    {
+      "layer": 20,
+      "feature_id": 3234,
+      "delta": 0.41350001096725464,
+      "toxic_rate": 0.5715000033378601,
+      "clean_rate": 0.15800000727176666,
+      "toxic_count": 1143,
+      "clean_count": 316,
+      "n_toxic": 2000,
+      "n_clean": 2000,
+      "neuronpedia": {
+        "feature_id": 3234,
+        "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/3234",
+        "explanations": [
+          {
+            "text": "specific references to criminal cases and legal terminology",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "relating to criminals and murderers",
+            "type": "np_acts-logits-general",
+            "score": null
+          },
+          {
+            "text": "criminals and offenders",
+            "type": "np_acts-logits-general",
+            "score": null
+          }
+        ]
+      }
+    },
+    {
+      "layer": 20,
+      "feature_id": 10122,
+      "delta": 0.40700000524520874,
+      "toxic_rate": 0.5139999985694885,
+      "clean_rate": 0.10700000077486038,
+      "toxic_count": 1028,
+      "clean_count": 214,
+      "n_toxic": 2000,
+      "n_clean": 2000,
+      "neuronpedia": {
+        "feature_id": 10122,
+        "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/10122",
+        "explanations": [
+          {
+            "text": "references to cyber threats and attacks, particularly involving hackers and malicious organizations",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "Threats, attacks, or invasions",
+            "type": "np_acts-logits-general",
+            "score": null
+          },
+          {
+            "text": "Threatening invaders",
+            "type": "np_acts-logits-general",
+            "score": null
+          }
+        ]
+      }
+    },
+    {
+      "layer": 20,
+      "feature_id": 14600,
+      "delta": 0.38099998235702515,
+      "toxic_rate": 0.8224999904632568,
+      "clean_rate": 0.4415000081062317,
+      "toxic_count": 1645,
+      "clean_count": 883,
+      "n_toxic": 2000,
+      "n_clean": 2000,
+      "neuronpedia": {
+        "feature_id": 14600,
+        "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/14600",
+        "explanations": [
+          {
+            "text": "instances of hypocrisy and contradictions in behavior or beliefs",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "expressing surprise, disbelief, or negativity",
+            "type": "np_acts-logits-general",
+            "score": null
+          },
+          {
+            "text": "skepticism, surprise, emotional disbelief",
+            "type": "np_acts-logits-general",
+            "score": null
+          }
+        ]
+      }
+    },
+    {
+      "layer": 20,
+      "feature_id": 12566,
+      "delta": 0.3774999976158142,
+      "toxic_rate": 0.5289999842643738,
+      "clean_rate": 0.15150000154972076,
+      "toxic_count": 1058,
+      "clean_count": 303,
+      "n_toxic": 2000,
+      "n_clean": 2000,
+      "neuronpedia": {
+        "feature_id": 12566,
+        "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/12566",
+        "explanations": [
+          {
+            "text": "claims of entitlement and perceived superiority based on institutional affiliation",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "preceding or related to \"bullshit\"",
+            "type": "np_acts-logits-general",
+            "score": null
+          },
+          {
+            "text": "meaningless claims and falsehoods",
+            "type": "np_acts-logits-general",
+            "score": null
+          }
+        ]
+      }
+    },
+    {
+      "layer": 20,
+      "feature_id": 4893,
+      "delta": 0.3610000014305115,
+      "toxic_rate": 0.4684999883174896,
+      "clean_rate": 0.10750000178813934,
+      "toxic_count": 937,
+      "clean_count": 215,
+      "n_toxic": 2000,
+      "n_clean": 2000,
+      "neuronpedia": {
+        "feature_id": 4893,
+        "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/4893",
+        "explanations": [
+          {
+            "text": "references to violence and threats to safety",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "Attacking, targeting, or harming others",
+            "type": "np_acts-logits-general",
+            "score": null
+          },
+          {
+            "text": "violence against innocents",
+            "type": "np_acts-logits-general",
+            "score": null
+          }
+        ]
+      }
+    },
+    {
+      "layer": 20,
+      "feature_id": 16209,
+      "delta": 0.3604999780654907,
+      "toxic_rate": 0.6309999823570251,
+      "clean_rate": 0.2705000042915344,
+      "toxic_count": 1262,
+      "clean_count": 541,
+      "n_toxic": 2000,
+      "n_clean": 2000,
+      "neuronpedia": {
+        "feature_id": 16209,
+        "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/16209",
+        "explanations": [
+          {
+            "text": "expressions of urgency and frustration in informal communication",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "Imperative sentences and requests",
+            "type": "np_acts-logits-general",
+            "score": null
+          },
+          {
+            "text": "please and requests",
+            "type": "np_acts-logits-general",
+            "score": null
+          }
+        ]
+      }
+    },
+    {
+      "layer": 20,
+      "feature_id": 807,
+      "delta": 0.3555000126361847,
+      "toxic_rate": 0.7400000095367432,
+      "clean_rate": 0.38449999690055847,
+      "toxic_count": 1480,
+      "clean_count": 769,
+      "n_toxic": 2000,
+      "n_clean": 2000,
+      "neuronpedia": {
+        "feature_id": 807,
+        "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/807",
+        "explanations": [
+          {
+            "text": "references to influential individuals and their actions or statements",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "Conspiracy theories/Deep state content",
+            "type": "np_acts-logits-general",
+            "score": null
+          },
+          {
+            "text": "conspiracy terms and contractions",
+            "type": "np_acts-logits-general",
+            "score": null
+          }
+        ]
+      }
+    },
+    {
+      "layer": 20,
+      "feature_id": 8837,
+      "delta": 0.3540000021457672,
+      "toxic_rate": 0.4334999918937683,
+      "clean_rate": 0.0794999971985817,
+      "toxic_count": 867,
+      "clean_count": 159,
+      "n_toxic": 2000,
+      "n_clean": 2000,
+      "neuronpedia": {
+        "feature_id": 8837,
+        "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/8837",
+        "explanations": [
+          {
+            "text": "the names of large animals.\n",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "animals and animal-related terms",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "Animal names",
+            "type": "np_acts-logits-general",
+            "score": null
+          },
+          {
+            "text": "animals followed by descriptions or names",
+            "type": "np_acts-logits-general",
+            "score": null
+          }
+        ]
+      }
+    },
+    {
+      "layer": 20,
+      "feature_id": 2438,
+      "delta": 0.3449999690055847,
+      "toxic_rate": 0.6359999775886536,
+      "clean_rate": 0.29100000858306885,
+      "toxic_count": 1272,
+      "clean_count": 582,
+      "n_toxic": 2000,
+      "n_clean": 2000,
+      "neuronpedia": {
+        "feature_id": 2438,
+        "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/2438",
+        "explanations": [
+          {
+            "text": "statements questioning the validity or reliability of claims",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "End of sentences",
+            "type": "np_acts-logits-general",
+            "score": null
+          },
+          {
+            "text": "your argument",
+            "type": "np_acts-logits-general",
+            "score": null
+          }
+        ]
+      }
+    },
+    {
+      "layer": 20,
+      "feature_id": 3084,
+      "delta": 0.32899999618530273,
+      "toxic_rate": 0.5115000009536743,
+      "clean_rate": 0.18250000476837158,
+      "toxic_count": 1023,
+      "clean_count": 365,
+      "n_toxic": 2000,
+      "n_clean": 2000,
+      "neuronpedia": {
+        "feature_id": 3084,
+        "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/3084",
+        "explanations": [
+          {
+            "text": "negative emotional experiences and reactions related to personal experiences",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "Following intensifiers (literally, almost, barely)",
+            "type": "np_acts-logits-general",
+            "score": null
+          },
+          {
+            "text": "literally zero",
+            "type": "np_acts-logits-general",
+            "score": null
+          }
+        ]
+      }
+    },
+    {
+      "layer": 20,
+      "feature_id": 12042,
+      "delta": 0.31699997186660767,
+      "toxic_rate": 0.640999972820282,
+      "clean_rate": 0.3240000009536743,
+      "toxic_count": 1282,
+      "clean_count": 648,
+      "n_toxic": 2000,
+      "n_clean": 2000,
+      "neuronpedia": {
+        "feature_id": 12042,
+        "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/12042",
+        "explanations": [
+          {
+            "text": "explicit descriptions of sexual interactions and actions",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "Explicit, sexual content",
+            "type": "np_acts-logits-general",
+            "score": null
+          },
+          {
+            "text": "explicit sexual content",
+            "type": "np_acts-logits-general",
+            "score": null
+          }
+        ]
+      }
+    },
+    {
+      "layer": 20,
+      "feature_id": 11477,
+      "delta": 0.3149999976158142,
+      "toxic_rate": 0.4749999940395355,
+      "clean_rate": 0.1599999964237213,
+      "toxic_count": 950,
+      "clean_count": 320,
+      "n_toxic": 2000,
+      "n_clean": 2000,
+      "neuronpedia": {
+        "feature_id": 11477,
+        "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/11477",
+        "explanations": [
+          {
+            "text": "text describing negative experiences and emotional distress",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "Follows intensifiers/opinion words",
+            "type": "np_acts-logits-general",
+            "score": null
+          },
+          {
+            "text": "very negative outcomes",
+            "type": "np_acts-logits-general",
+            "score": null
+          }
+        ]
+      }
+    },
+    {
+      "layer": 20,
+      "feature_id": 10222,
+      "delta": 0.31150001287460327,
+      "toxic_rate": 0.5130000114440918,
+      "clean_rate": 0.20149999856948853,
+      "toxic_count": 1026,
+      "clean_count": 403,
+      "n_toxic": 2000,
+      "n_clean": 2000,
+      "neuronpedia": {
+        "feature_id": 10222,
+        "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/10222",
+        "explanations": [
+          {
+            "text": "references to legal terminology and issues related to reputation and defamation",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "Negative comments or accusations",
+            "type": "np_acts-logits-general",
+            "score": null
+          },
+          {
+            "text": "personal attacks and insults",
+            "type": "np_acts-logits-general",
+            "score": null
+          }
+        ]
+      }
+    },
+    {
+      "layer": 20,
+      "feature_id": 7077,
+      "delta": 0.30799996852874756,
+      "toxic_rate": 0.8274999856948853,
+      "clean_rate": 0.5195000171661377,
+      "toxic_count": 1655,
+      "clean_count": 1039,
+      "n_toxic": 2000,
+      "n_clean": 2000,
+      "neuronpedia": {
+        "feature_id": 7077,
+        "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/7077",
+        "explanations": [
+          {
+            "text": "criticisms and discussions surrounding historical injustices related to slavery",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "End of sentences and interjections",
+            "type": "np_acts-logits-general",
+            "score": null
+          },
+          {
+            "text": "judgments and opinions",
+            "type": "np_acts-logits-general",
+            "score": null
+          }
+        ]
+      }
+    },
+    {
+      "layer": 20,
+      "feature_id": 13243,
+      "delta": 0.30699998140335083,
+      "toxic_rate": 0.42399999499320984,
+      "clean_rate": 0.11699999868869781,
+      "toxic_count": 848,
+      "clean_count": 234,
+      "n_toxic": 2000,
+      "n_clean": 2000,
+      "neuronpedia": {
+        "feature_id": 13243,
+        "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/13243",
+        "explanations": [
+          {
+            "text": "references to physical attributes and bodily sensations",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "Parts of the body",
+            "type": "np_acts-logits-general",
+            "score": null
+          },
+          {
+            "text": "body parts",
+            "type": "np_acts-logits-general",
+            "score": null
+          }
+        ]
+      }
+    },
+    {
+      "layer": 20,
+      "feature_id": 12881,
+      "delta": 0.2880000174045563,
+      "toxic_rate": 0.6945000290870667,
+      "clean_rate": 0.4065000116825104,
+      "toxic_count": 1389,
+      "clean_count": 813,
+      "n_toxic": 2000,
+      "n_clean": 2000,
+      "neuronpedia": {
+        "feature_id": 12881,
+        "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/12881",
+        "explanations": [
+          {
+            "text": "instances of suggestion and influence in conversations",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "Imperative sentences or requests",
+            "type": "np_acts-logits-general",
+            "score": null
+          },
+          {
+            "text": "commands and recommendations",
+            "type": "np_acts-logits-general",
+            "score": null
+          }
+        ]
+      }
+    },
+    {
+      "layer": 20,
+      "feature_id": 13736,
+      "delta": 0.2880000174045563,
+      "toxic_rate": 0.3790000081062317,
+      "clean_rate": 0.09099999815225601,
+      "toxic_count": 758,
+      "clean_count": 182,
+      "n_toxic": 2000,
+      "n_clean": 2000,
+      "neuronpedia": {
+        "feature_id": 13736,
+        "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/13736",
+        "explanations": [
+          {
+            "text": "expressions related to perseverance and resilience",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "Negation or refusal",
+            "type": "np_acts-logits-general",
+            "score": null
+          },
+          {
+            "text": "excuses, complaining, laziness",
+            "type": "np_acts-logits-general",
+            "score": null
+          }
+        ]
+      }
+    },
+    {
+      "layer": 20,
+      "feature_id": 12651,
+      "delta": 0.27300000190734863,
+      "toxic_rate": 0.3675000071525574,
+      "clean_rate": 0.09449999779462814,
+      "toxic_count": 735,
+      "clean_count": 189,
+      "n_toxic": 2000,
+      "n_clean": 2000,
+      "neuronpedia": {
+        "feature_id": 12651,
+        "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/12651",
+        "explanations": [
+          {
+            "text": "expressions of emotional struggle and interpersonal conflict",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "Following certain pronouns/articles",
+            "type": "np_acts-logits-general",
+            "score": null
+          },
+          {
+            "text": "predictable word sequences",
+            "type": "np_acts-logits-general",
+            "score": null
+          }
+        ]
+      }
+    },
+    {
+      "layer": 20,
+      "feature_id": 5808,
+      "delta": 0.26899999380111694,
+      "toxic_rate": 0.4169999957084656,
+      "clean_rate": 0.14800000190734863,
+      "toxic_count": 834,
+      "clean_count": 296,
+      "n_toxic": 2000,
+      "n_clean": 2000,
+      "neuronpedia": {
+        "feature_id": 5808,
+        "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/5808",
+        "explanations": [
+          {
+            "text": "expressions of criticism directed at individuals or practices perceived as exploitative or unjust",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "disapproval or negativity",
+            "type": "np_acts-logits-general",
+            "score": null
+          },
+          {
+            "text": "utterly abhorrent condemnation",
+            "type": "np_acts-logits-general",
+            "score": null
+          }
+        ]
+      }
+    },
+    {
+      "layer": 20,
+      "feature_id": 13829,
+      "delta": 0.2670000195503235,
+      "toxic_rate": 0.3725000023841858,
+      "clean_rate": 0.1054999977350235,
+      "toxic_count": 745,
+      "clean_count": 211,
+      "n_toxic": 2000,
+      "n_clean": 2000,
+      "neuronpedia": {
+        "feature_id": 13829,
+        "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/13829",
+        "explanations": [
+          {
+            "text": " expressions of mental instability and emotions related to sanity",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "\"crazy\" or \"insane\"",
+            "type": "np_acts-logits-general",
+            "score": null
+          },
+          {
+            "text": "crazy and insane states",
+            "type": "np_acts-logits-general",
+            "score": null
+          }
+        ]
+      }
+    },
+    {
+      "layer": 20,
+      "feature_id": 14324,
+      "delta": 0.25949999690055847,
+      "toxic_rate": 0.27649998664855957,
+      "clean_rate": 0.017000000923871994,
+      "toxic_count": 553,
+      "clean_count": 34,
+      "n_toxic": 2000,
+      "n_clean": 2000,
+      "neuronpedia": {
+        "feature_id": 14324,
+        "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/14324",
+        "explanations": [
+          {
+            "text": "terms related to dust and dirt in various contexts",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "\"dust\" and related contexts",
+            "type": "np_acts-logits-general",
+            "score": null
+          },
+          {
+            "text": "dust and pollution",
+            "type": "np_acts-logits-general",
+            "score": null
+          }
+        ]
+      }
+    },
+    {
+      "layer": 20,
+      "feature_id": 5400,
+      "delta": 0.25949999690055847,
+      "toxic_rate": 0.4580000042915344,
+      "clean_rate": 0.19850000739097595,
+      "toxic_count": 916,
+      "clean_count": 397,
+      "n_toxic": 2000,
+      "n_clean": 2000,
+      "neuronpedia": {
+        "feature_id": 5400,
+        "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/5400",
+        "explanations": [
+          {
+            "text": "words related to fictional or mythical elements",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "after capitalized words",
+            "type": "np_acts-logits-general",
+            "score": null
+          },
+          {
+            "text": "midnight madness",
+            "type": "np_acts-logits-general",
+            "score": null
+          }
+        ]
+      }
+    },
+    {
+      "layer": 20,
+      "feature_id": 6073,
+      "delta": 0.2574999928474426,
+      "toxic_rate": 0.320499986410141,
+      "clean_rate": 0.06300000101327896,
+      "toxic_count": 641,
+      "clean_count": 126,
+      "n_toxic": 2000,
+      "n_clean": 2000,
+      "neuronpedia": {
+        "feature_id": 6073,
+        "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/6073",
+        "explanations": [
+          {
+            "text": "incidents related to legal enforcement or conflict situations",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "Physical altercations and violence",
+            "type": "np_acts-logits-general",
+            "score": null
+          },
+          {
+            "text": "physical violence and assault",
+            "type": "np_acts-logits-general",
+            "score": null
+          }
+        ]
+      }
+    },
+    {
+      "layer": 20,
+      "feature_id": 12685,
+      "delta": 0.2549999952316284,
+      "toxic_rate": 0.2784999907016754,
+      "clean_rate": 0.023499999195337296,
+      "toxic_count": 557,
+      "clean_count": 47,
+      "n_toxic": 2000,
+      "n_clean": 2000,
+      "neuronpedia": {
+        "feature_id": 12685,
+        "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/12685",
+        "explanations": [
+          {
+            "text": " references to violent actions and physical aggression",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "Acts of violence/aggression",
+            "type": "np_acts-logits-general",
+            "score": null
+          },
+          {
+            "text": "physical attacks and injuries",
+            "type": "np_acts-logits-general",
+            "score": null
+          }
+        ]
+      }
+    },
+    {
+      "layer": 20,
+      "feature_id": 11047,
+      "delta": 0.24950000643730164,
+      "toxic_rate": 0.4020000100135803,
+      "clean_rate": 0.1525000035762787,
+      "toxic_count": 804,
+      "clean_count": 305,
+      "n_toxic": 2000,
+      "n_clean": 2000,
+      "neuronpedia": {
+        "feature_id": 11047,
+        "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/11047",
+        "explanations": [
+          {
+            "text": "references to control and obedience",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "Obedience and submission",
+            "type": "np_acts-logits-general",
+            "score": null
+          },
+          {
+            "text": "obedience and submission",
+            "type": "np_acts-logits-general",
+            "score": null
+          }
+        ]
+      }
+    },
+    {
+      "layer": 20,
+      "feature_id": 2916,
+      "delta": 0.24900001287460327,
+      "toxic_rate": 0.6460000276565552,
+      "clean_rate": 0.3970000147819519,
+      "toxic_count": 1292,
+      "clean_count": 794,
+      "n_toxic": 2000,
+      "n_clean": 2000,
+      "neuronpedia": {
+        "feature_id": 2916,
+        "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/2916",
+        "explanations": [
+          {
+            "text": "references to technology and its implications",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "Text after certain punctuation/conjunctions",
+            "type": "np_acts-logits-general",
+            "score": null
+          },
+          {
+            "text": "lists phrases starting with specific words",
+            "type": "np_acts-logits-general",
+            "score": null
+          }
+        ]
+      }
+    },
+    {
+      "layer": 20,
+      "feature_id": 8181,
+      "delta": 0.2355000078678131,
+      "toxic_rate": 0.3100000023841858,
+      "clean_rate": 0.07450000196695328,
+      "toxic_count": 620,
+      "clean_count": 149,
+      "n_toxic": 2000,
+      "n_clean": 2000,
+      "neuronpedia": {
+        "feature_id": 8181,
+        "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/8181",
+        "explanations": [
+          {
+            "text": " verbs related to actions of changing state or control",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "Follows \"turned\" or \"log\" and indicates a state change",
+            "type": "np_acts-logits-general",
+            "score": null
+          },
+          {
+            "text": "turned off",
+            "type": "np_acts-logits-general",
+            "score": null
+          }
+        ]
+      }
+    },
+    {
+      "layer": 20,
+      "feature_id": 1794,
+      "delta": 0.23399999737739563,
+      "toxic_rate": 0.2759999930858612,
+      "clean_rate": 0.041999999433755875,
+      "toxic_count": 552,
+      "clean_count": 84,
+      "n_toxic": 2000,
+      "n_clean": 2000,
+      "neuronpedia": {
+        "feature_id": 1794,
+        "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/1794",
+        "explanations": [
+          {
+            "text": " anatomical terms related to body parts and injuries",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "after body parts",
+            "type": "np_acts-logits-general",
+            "score": null
+          },
+          {
+            "text": "depth and height of body parts",
+            "type": "np_acts-logits-general",
+            "score": null
+          }
+        ]
+      }
+    },
+    {
+      "layer": 20,
+      "feature_id": 12051,
+      "delta": 0.23249998688697815,
+      "toxic_rate": 0.3294999897480011,
+      "clean_rate": 0.09700000286102295,
+      "toxic_count": 659,
+      "clean_count": 194,
+      "n_toxic": 2000,
+      "n_clean": 2000,
+      "neuronpedia": {
+        "feature_id": 12051,
+        "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/12051",
+        "explanations": [
+          {
+            "text": "elements related to fantasy and magical themes",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "Elements or materials",
+            "type": "np_acts-logits-general",
+            "score": null
+          },
+          {
+            "text": "elements and concepts",
+            "type": "np_acts-logits-general",
+            "score": null
+          }
+        ]
+      }
+    },
+    {
+      "layer": 20,
+      "feature_id": 13064,
+      "delta": 0.22600001096725464,
+      "toxic_rate": 0.6305000185966492,
+      "clean_rate": 0.40450000762939453,
+      "toxic_count": 1261,
+      "clean_count": 809,
+      "n_toxic": 2000,
+      "n_clean": 2000,
+      "neuronpedia": {
+        "feature_id": 13064,
+        "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/13064",
+        "explanations": [
+          {
+            "text": "descriptions of video game features and player experiences",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "Video game context",
+            "type": "np_acts-logits-general",
+            "score": null
+          },
+          {
+            "text": "game logic",
+            "type": "np_acts-logits-general",
+            "score": null
+          }
+        ]
+      }
+    },
+    {
+      "layer": 20,
+      "feature_id": 13710,
+      "delta": 0.22550000250339508,
+      "toxic_rate": 0.3425000011920929,
+      "clean_rate": 0.11699999868869781,
+      "toxic_count": 685,
+      "clean_count": 234,
+      "n_toxic": 2000,
+      "n_clean": 2000,
+      "neuronpedia": {
+        "feature_id": 13710,
+        "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/13710",
+        "explanations": [
+          {
+            "text": "elements related to humor and irony in storytelling",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "Negative sentiment/criticism",
+            "type": "np_acts-logits-general",
+            "score": null
+          },
+          {
+            "text": "excessive or unnecessary qualities",
+            "type": "np_acts-logits-general",
+            "score": null
+          }
+        ]
+      }
+    },
+    {
+      "layer": 20,
+      "feature_id": 8807,
+      "delta": 0.2254999876022339,
+      "toxic_rate": 0.2619999945163727,
+      "clean_rate": 0.0364999994635582,
+      "toxic_count": 524,
+      "clean_count": 73,
+      "n_toxic": 2000,
+      "n_clean": 2000,
+      "neuronpedia": {
+        "feature_id": 8807,
+        "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/8807",
+        "explanations": [
+          {
+            "text": "emotional and physical expressions related to speaking or the mouth",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "the mouth or tongue",
+            "type": "np_acts-logits-general",
+            "score": null
+          },
+          {
+            "text": "mouth and tongue",
+            "type": "np_acts-logits-general",
+            "score": null
+          }
+        ]
+      }
+    },
+    {
+      "layer": 20,
+      "feature_id": 15925,
+      "delta": 0.21599999070167542,
+      "toxic_rate": 0.6365000009536743,
+      "clean_rate": 0.4205000102519989,
+      "toxic_count": 1273,
+      "clean_count": 841,
+      "n_toxic": 2000,
+      "n_clean": 2000,
+      "neuronpedia": {
+        "feature_id": 15925,
+        "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/15925",
+        "explanations": [
+          {
+            "text": "references to personal identity or self-description",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "\"a\" followed by an adjective",
+            "type": "np_acts-logits-general",
+            "score": null
+          },
+          {
+            "text": "a [descriptor]",
+            "type": "np_acts-logits-general",
+            "score": null
+          }
+        ]
+      }
+    },
+    {
+      "layer": 20,
+      "feature_id": 7060,
+      "delta": 0.21450001001358032,
+      "toxic_rate": 0.3815000057220459,
+      "clean_rate": 0.16699999570846558,
+      "toxic_count": 763,
+      "clean_count": 334,
+      "n_toxic": 2000,
+      "n_clean": 2000,
+      "neuronpedia": {
+        "feature_id": 7060,
+        "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/7060",
+        "explanations": [
+          {
+            "text": "adjectives associated with descriptions of food and culinary experiences",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "before a descriptive name/phrase",
+            "type": "np_acts-logits-general",
+            "score": null
+          },
+          {
+            "text": "adjectives followed by nouns",
+            "type": "np_acts-logits-general",
+            "score": null
+          }
+        ]
+      }
+    },
+    {
+      "layer": 20,
+      "feature_id": 15753,
+      "delta": 0.21449999511241913,
+      "toxic_rate": 0.3425000011920929,
+      "clean_rate": 0.12800000607967377,
+      "toxic_count": 685,
+      "clean_count": 256,
+      "n_toxic": 2000,
+      "n_clean": 2000,
+      "neuronpedia": {
+        "feature_id": 15753,
+        "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/15753",
+        "explanations": [
+          {
+            "text": "instances of the word \"the\" and expressions of strong emotions or frustrations",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "Follows expletives (e.g., \"hell,\" \"fuck\")",
+            "type": "np_acts-logits-general",
+            "score": null
+          },
+          {
+            "text": "what the hell",
+            "type": "np_acts-logits-general",
+            "score": null
+          }
+        ]
+      }
+    },
+    {
+      "layer": 20,
+      "feature_id": 5196,
+      "delta": 0.2134999930858612,
+      "toxic_rate": 0.28049999475479126,
+      "clean_rate": 0.06700000166893005,
+      "toxic_count": 561,
+      "clean_count": 134,
+      "n_toxic": 2000,
+      "n_clean": 2000,
+      "neuronpedia": {
+        "feature_id": 5196,
+        "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/5196",
+        "explanations": [
+          {
+            "text": "similes or comparisons involving \"like\" or \"as\"",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "Comes after \"like a\"",
+            "type": "np_acts-logits-general",
+            "score": null
+          },
+          {
+            "text": "like a comparison",
+            "type": "np_acts-logits-general",
+            "score": null
+          }
+        ]
+      }
+    },
+    {
+      "layer": 20,
+      "feature_id": 6385,
+      "delta": 0.21250000596046448,
+      "toxic_rate": 0.5789999961853027,
+      "clean_rate": 0.36649999022483826,
+      "toxic_count": 1158,
+      "clean_count": 733,
+      "n_toxic": 2000,
+      "n_clean": 2000,
+      "neuronpedia": {
+        "feature_id": 6385,
+        "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/6385",
+        "explanations": [
+          {
+            "text": "emotional expressions and reactions in conversations",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "Punctuation followed by capitalized word",
+            "type": "np_acts-logits-general",
+            "score": null
+          },
+          {
+            "text": "Achievement Unlocked!",
+            "type": "np_acts-logits-general",
+            "score": null
+          }
+        ]
+      }
+    },
+    {
+      "layer": 20,
+      "feature_id": 15120,
+      "delta": 0.2094999998807907,
+      "toxic_rate": 0.4490000009536743,
+      "clean_rate": 0.2395000010728836,
+      "toxic_count": 898,
+      "clean_count": 479,
+      "n_toxic": 2000,
+      "n_clean": 2000,
+      "neuronpedia": {
+        "feature_id": 15120,
+        "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/15120",
+        "explanations": [
+          {
+            "text": "informal expressions or phrases indicating condition or reason",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "Archaic or shortened conjunctions/adverbs",
+            "type": "np_acts-logits-general",
+            "score": null
+          },
+          {
+            "text": "conjunctions or subordinate clauses",
+            "type": "np_acts-logits-general",
+            "score": null
+          }
+        ]
+      }
+    },
+    {
+      "layer": 20,
+      "feature_id": 2707,
+      "delta": 0.20800000429153442,
+      "toxic_rate": 0.3400000035762787,
+      "clean_rate": 0.13199999928474426,
+      "toxic_count": 680,
+      "clean_count": 264,
+      "n_toxic": 2000,
+      "n_clean": 2000,
+      "neuronpedia": {
+        "feature_id": 2707,
+        "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/2707",
+        "explanations": [
+          {
+            "text": "narratives involving conflict and power dynamics among characters",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "destruction or overthrowing",
+            "type": "np_acts-logits-general",
+            "score": null
+          },
+          {
+            "text": "overthrow or destroy",
+            "type": "np_acts-logits-general",
+            "score": null
+          }
+        ]
+      }
+    },
+    {
+      "layer": 20,
+      "feature_id": 11921,
+      "delta": 0.20750001072883606,
+      "toxic_rate": 0.6610000133514404,
+      "clean_rate": 0.45350000262260437,
+      "toxic_count": 1322,
+      "clean_count": 907,
+      "n_toxic": 2000,
+      "n_clean": 2000,
+      "neuronpedia": {
+        "feature_id": 11921,
+        "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/11921",
+        "explanations": [
+          {
+            "text": "verbal expressions of obligation or necessity",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "followed by infinitive \"to\"",
+            "type": "np_acts-logits-general",
+            "score": null
+          },
+          {
+            "text": "to + verb",
+            "type": "np_acts-logits-general",
+            "score": null
+          }
+        ]
+      }
+    },
+    {
+      "layer": 20,
+      "feature_id": 818,
+      "delta": 0.20649999380111694,
+      "toxic_rate": 0.21899999678134918,
+      "clean_rate": 0.012500000186264515,
+      "toxic_count": 438,
+      "clean_count": 25,
+      "n_toxic": 2000,
+      "n_clean": 2000,
+      "neuronpedia": {
+        "feature_id": 818,
+        "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/818",
+        "explanations": [
+          {
+            "text": "terms related to waste management and disposal",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "following \"waste\"",
+            "type": "np_acts-logits-general",
+            "score": null
+          },
+          {
+            "text": "waste and disposal of waste",
+            "type": "np_acts-logits-general",
+            "score": null
+          }
+        ]
+      }
+    },
+    {
+      "layer": 20,
+      "feature_id": 15644,
+      "delta": 0.20550000667572021,
+      "toxic_rate": 0.2770000100135803,
+      "clean_rate": 0.07150000333786011,
+      "toxic_count": 554,
+      "clean_count": 143,
+      "n_toxic": 2000,
+      "n_clean": 2000,
+      "neuronpedia": {
+        "feature_id": 15644,
+        "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/15644",
+        "explanations": [
+          {
+            "text": "phrases indicating legal actions and outcomes",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "discontinuation or ending",
+            "type": "np_acts-logits-general",
+            "score": null
+          },
+          {
+            "text": "endings and failures",
+            "type": "np_acts-logits-general",
+            "score": null
+          }
+        ]
+      }
+    },
+    {
+      "layer": 20,
+      "feature_id": 4039,
+      "delta": 0.2045000046491623,
+      "toxic_rate": 0.44850000739097595,
+      "clean_rate": 0.24400000274181366,
+      "toxic_count": 897,
+      "clean_count": 488,
+      "n_toxic": 2000,
+      "n_clean": 2000,
+      "neuronpedia": {
+        "feature_id": 4039,
+        "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/4039",
+        "explanations": [
+          {
+            "text": "physical items and components in various contexts",
+            "type": "oai_token-act-pair",
+            "score": null
+          },
+          {
+            "text": "Word fragments ending with \"a\", \"o\", or \"r\"",
+            "type": "np_acts-logits-general",
+            "score": null
+          },
+          {
+            "text": "cot, bar, pan, cog, fur, pad, eras, toy",
+            "type": "np_acts-logits-general",
+            "score": null
+          }
+        ]
+      }
+    }
+  ],
+  "ranked_features_top_k": 50,
+  "or_metrics": {
+    "accuracy": 0.796,
+    "precision": 0.7151162790697675,
+    "recall": 0.984,
+    "f1": 0.8282828282828284,
+    "tp": 492,
+    "fp": 196,
+    "tn": 304,
+    "fn": 8
+  },
+  "logic_classifier": {
+    "architecture": {
+      "input_dim": 2,
+      "logic_layer_dims": [
+        2,
+        1
+      ],
+      "output_mode": "binary",
+      "group_sum_k": null,
+      "tau": null,
+      "threshold": 0.5,
+      "implementation": "python",
+      "device": "cpu",
+      "connections": "random"
+    },
+    "training": {
+      "epochs": 100,
+      "batch_size": 256,
+      "learning_rate": 0.01,
+      "seed": 0,
+      "final_loss": 0.34144165086746214,
+      "loss_first": 0.46745547103881835
+    },
+    "feature_ids": [
+      13324,
+      2746
+    ],
+    "train_soft_metrics": {
+      "accuracy": 0.8325,
+      "precision": 0.7577519379844961,
+      "recall": 0.9775,
+      "f1": 0.8537117903930131,
+      "tp": 1955,
+      "fp": 625,
+      "tn": 1375,
+      "fn": 45
+    },
+    "eval_soft_metrics": {
+      "accuracy": 0.829,
+      "precision": 0.7558320373250389,
+      "recall": 0.972,
+      "f1": 0.8503937007874016,
+      "tp": 486,
+      "fp": 157,
+      "tn": 343,
+      "fn": 14
+    },
+    "train_hard_metrics": {
+      "accuracy": 0.8325,
+      "precision": 0.7577519379844961,
+      "recall": 0.9775,
+      "f1": 0.8537117903930131,
+      "tp": 1955,
+      "fp": 625,
+      "tn": 1375,
+      "fn": 45
+    },
+    "eval_hard_metrics": {
+      "accuracy": 0.829,
+      "precision": 0.7558320373250389,
+      "recall": 0.972,
+      "f1": 0.8503937007874016,
+      "tp": 486,
+      "fp": 157,
+      "tn": 343,
+      "fn": 14
+    },
+    "hard_circuit": {
+      "format": "difflogic_hard_circuit_v1",
+      "output_mode": "binary",
+      "inputs": [
+        {
+          "name": "i1",
+          "feature_id": 13324,
+          "description": "top_feature_1_fires",
+          "meaning": {
+            "feature_id": 13324,
+            "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/13324",
+            "explanations": [
+              {
+                "text": "expressions of strong emotions and expletives",
+                "type": "oai_token-act-pair",
+                "score": null
+              },
+              {
+                "text": "Insults and profanity",
+                "type": "np_acts-logits-general",
+                "score": null
+              },
+              {
+                "text": "calling someone filthy or worthless",
+                "type": "np_acts-logits-general",
+                "score": null
+              }
+            ],
+            "top_explanation": "expressions of strong emotions and expletives"
+          }
+        },
+        {
+          "name": "i2",
+          "feature_id": 2746,
+          "description": "top_feature_2_fires",
+          "meaning": {
+            "feature_id": 2746,
+            "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/2746",
+            "explanations": [
+              {
+                "text": "terms and concepts related to fraudulent activities, including various forms of fraud and deception",
+                "type": "oai_token-act-pair",
+                "score": null
+              },
+              {
+                "text": "Sentences containing the word \"fraud.\"",
+                "type": "np_acts-logits-general",
+                "score": null
+              },
+              {
+                "text": "fraud and scams",
+                "type": "np_acts-logits-general",
+                "score": null
+              }
+            ],
+            "top_explanation": "terms and concepts related to fraudulent activities, including various forms of fraud and deception"
+          }
+        }
+      ],
+      "operators": [
+        "zero",
+        "and",
+        "a_and_not_b",
+        "a",
+        "b_and_not_a",
+        "b",
+        "xor",
+        "or",
+        "nor",
+        "xnor",
+        "not_b",
+        "b_implies_a",
+        "not_a",
+        "a_implies_b",
+        "nand",
+        "one"
+      ],
+      "layers": [
+        {
+          "layer": 0,
+          "in_dim": 2,
+          "out_dim": 2,
+          "nodes": [
+            {
+              "id": "L0.g0",
+              "op_index": 3,
+              "op": "a",
+              "inputs": [
+                "i1",
+                "i2"
+              ],
+              "input_indices": [
+                0,
+                1
+              ],
+              "expression": "i1"
+            },
+            {
+              "id": "L0.g1",
+              "op_index": 3,
+              "op": "a",
+              "inputs": [
+                "i2",
+                "i1"
+              ],
+              "input_indices": [
+                1,
+                0
+              ],
+              "expression": "i2"
+            }
+          ]
+        },
+        {
+          "layer": 1,
+          "in_dim": 2,
+          "out_dim": 1,
+          "nodes": [
+            {
+              "id": "L1.g0",
+              "op_index": 3,
+              "op": "a",
+              "inputs": [
+                "L0.g0",
+                "L0.g1"
+              ],
+              "input_indices": [
+                0,
+                1
+              ],
+              "expression": "i1"
+            }
+          ]
+        }
+      ],
+      "binary_output": {
+        "term": "L1.g0",
+        "expression": "i1",
+        "decision": "toxic if expression == 1; clean if expression == 0"
+      },
+      "feature_meanings": {
+        "i1": {
+          "feature_id": 13324,
+          "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/13324",
+          "explanations": [
+            {
+              "text": "expressions of strong emotions and expletives",
+              "type": "oai_token-act-pair",
+              "score": null
+            },
+            {
+              "text": "Insults and profanity",
+              "type": "np_acts-logits-general",
+              "score": null
+            },
+            {
+              "text": "calling someone filthy or worthless",
+              "type": "np_acts-logits-general",
+              "score": null
+            }
+          ],
+          "top_explanation": "expressions of strong emotions and expletives"
+        },
+        "i2": {
+          "feature_id": 2746,
+          "neuronpedia_url": "https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/2746",
+          "explanations": [
+            {
+              "text": "terms and concepts related to fraudulent activities, including various forms of fraud and deception",
+              "type": "oai_token-act-pair",
+              "score": null
+            },
+            {
+              "text": "Sentences containing the word \"fraud.\"",
+              "type": "np_acts-logits-general",
+              "score": null
+            },
+            {
+              "text": "fraud and scams",
+              "type": "np_acts-logits-general",
+              "score": null
+            }
+          ],
+          "top_explanation": "terms and concepts related to fraudulent activities, including various forms of fraud and deception"
+        }
+      }
+    }
+  },
+  "metrics": {
+    "accuracy": 0.829,
+    "precision": 0.7558320373250389,
+    "recall": 0.972,
+    "f1": 0.8503937007874016,
+    "tp": 486,
+    "fp": 157,
+    "tn": 343,
+    "fn": 14
+  }
+}
