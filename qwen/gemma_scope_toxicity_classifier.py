@@ -327,6 +327,60 @@ def feature_meaning_lookup(
     return lookup
 
 
+def train_logistic_classifier(
+    train_firing: torch.Tensor,
+    train_labels: torch.Tensor,
+    eval_firing: torch.Tensor,
+    eval_labels: torch.Tensor,
+    *,
+    feature_ids: Sequence[int],
+    args: argparse.Namespace,
+) -> dict[str, Any]:
+    """Train a logistic regression on the boolean SAE firing matrix."""
+    from sklearn.linear_model import LogisticRegression
+
+    ids = torch.as_tensor(list(feature_ids), dtype=torch.long)
+    x_train = train_firing.index_select(1, ids).float().numpy()
+    y_train = train_labels.long().numpy()
+    x_eval = eval_firing.index_select(1, ids).float().numpy()
+    y_eval = eval_labels.long().numpy()
+
+    clf = LogisticRegression(
+        max_iter=1000,
+        random_state=args.seed,
+        C=getattr(args, "logistic_c", 1.0),
+        solver="lbfgs",
+    )
+    clf.fit(x_train, y_train)
+
+    def _metrics(x, y_true) -> Metrics:
+        y_pred = clf.predict(x).astype(bool)
+        return binary_metrics(
+            torch.as_tensor(y_true, dtype=torch.bool),
+            torch.as_tensor(y_pred, dtype=torch.bool),
+        )
+
+    train_metrics = _metrics(x_train, y_train)
+    eval_metrics = _metrics(x_eval, y_eval)
+
+    coef = clf.coef_[0].tolist()
+    weights = {f"i{i+1}": {"feature_id": int(feature_ids[i]), "weight": round(coef[i], 6)} for i in range(len(feature_ids))}
+    weights_sorted = sorted(weights.items(), key=lambda kv: abs(kv[1]["weight"]), reverse=True)
+
+    return {
+        "classifier": "logistic",
+        "feature_ids": list(map(int, feature_ids)),
+        "intercept": float(clf.intercept_[0]),
+        "weights": weights,
+        "weights_sorted_by_magnitude": [{"input": k, **v} for k, v in weights_sorted],
+        "train_metrics": asdict(train_metrics),
+        "eval_metrics": asdict(eval_metrics),
+        # aliases so the print/save code that looks for eval_hard_metrics works unchanged
+        "eval_hard_metrics": asdict(eval_metrics),
+        "eval_soft_metrics": asdict(eval_metrics),
+    }
+
+
 def attach_feature_meanings_to_logic_result(
     logic_result: dict[str, Any] | None,
     *,
@@ -397,7 +451,8 @@ def save_results(
         ),
         "ranked_features_top_k": len(ranked_features),
         "or_metrics": asdict(or_metrics),
-        "logic_classifier": logic_result,
+        "logic_classifier": logic_result if args.classifier == "difflogic" else None,
+        "logistic_classifier": logic_result if args.classifier == "logistic" else None,
         "metrics": asdict(metrics),
     }
     os.makedirs(os.path.dirname(os.path.abspath(path)) or ".", exist_ok=True)
@@ -472,7 +527,8 @@ def main() -> None:
     parser.add_argument("--firing-cache-dir", default=str(DEFAULT_OUT_DIR / "firing_cache"))
     parser.add_argument("--no-firing-cache", action="store_true")
     parser.add_argument("--save-ranked-top-k", type=int, default=50)
-    parser.add_argument("--classifier", choices=("or", "difflogic"), default="or")
+    parser.add_argument("--classifier", choices=("or", "difflogic", "logistic"), default="or")
+    parser.add_argument("--logistic-c", type=float, default=1.0, help="Inverse regularisation strength for logistic regression")
     parser.add_argument("--difflogic-path", default=str(Path(__file__).resolve().parents[1] / "difflogic"))
     parser.add_argument("--logic-output", choices=("binary", "groupsum"), default="binary")
     parser.add_argument("--logic-dims", default=None)
@@ -617,6 +673,16 @@ def main() -> None:
             source=args.neuronpedia_source,
             cache=neuronpedia_cache,
         )
+    elif args.classifier == "logistic":
+        logic_result = train_logistic_classifier(
+            discovery_firing,
+            discovery_labels,
+            eval_firing,
+            eval_labels,
+            feature_ids=feature_ids,
+            args=args,
+        )
+        metrics = Metrics(**logic_result["eval_hard_metrics"])
 
     print("selected features:")
     for f in features:
@@ -635,10 +701,16 @@ def main() -> None:
     print("or rule metrics:")
     print(json.dumps(asdict(or_metrics), indent=2))
     if logic_result is not None:
-        print("difflogic hard-gate eval metrics:")
+        label = "difflogic" if args.classifier == "difflogic" else "logistic"
+        print(f"{label} eval metrics:")
         print(json.dumps(logic_result["eval_hard_metrics"], indent=2))
-        print("difflogic soft eval metrics:")
-        print(json.dumps(logic_result["eval_soft_metrics"], indent=2))
+        if args.classifier == "logistic":
+            print(f"{label} weights (sorted by magnitude):")
+            for entry in logic_result["weights_sorted_by_magnitude"]:
+                print(f"  {entry['input']} fid={entry['feature_id']}  weight={entry['weight']:+.4f}")
+        else:
+            print("difflogic soft eval metrics:")
+            print(json.dumps(logic_result["eval_soft_metrics"], indent=2))
     save_results(
         args.out,
         args=args,

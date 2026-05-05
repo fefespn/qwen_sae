@@ -213,6 +213,46 @@ Precision 0.864
 Recall    0.924
 ```
 
+### Gemma Logistic Regression Results
+
+As a sanity-check upper bound, we also trained a plain logistic regression on the same top-k boolean firing vectors (same discovery split, same eval split, sklearn `LogisticRegression` with L2 regularisation C=1.0):
+
+| top-k | Accuracy | Precision | Recall | F1 | TP | FP | TN | FN | Top-3 weights |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| 1 | 0.829 | 0.756 | 0.972 | 0.850 | 486 | 157 | 343 | 14 | i1(+4.45) |
+| 2 | 0.829 | 0.756 | 0.972 | 0.850 | 486 | 157 | 343 | 14 | i1(+4.05), i2(+2.11) |
+| 4 | 0.866 | 0.829 | 0.922 | 0.873 | 461 | 95 | 405 | 39 | i1(+3.35), i3(+1.71), i2(+1.57) |
+| 8 | 0.891 | 0.880 | 0.906 | 0.893 | 453 | 62 | 438 | 47 | i1(+2.76), i5(+2.06), i2(+1.43) |
+| 16 | 0.902 | 0.887 | 0.922 | 0.904 | 461 | 59 | 441 | 39 | i1(+2.29), i5(+1.82), i15(+1.48) |
+| 32 | 0.913 | 0.904 | 0.924 | **0.914** | 462 | 49 | 451 | 38 | i1(+2.30), i28(+1.88), i15(+1.43) |
+
+Run with:
+
+```bash
+qwen/.venv/bin/python qwen/gemma_scope_toxicity_classifier.py \
+  --language en \
+  --layer 20 \
+  --top-k-features 8 \
+  --classifier logistic
+```
+
+Output JSON is saved under `qwen/out/gemma_scope_layer20_en_top8_logistic.json` with the key `logistic_classifier`.
+
+#### Logistic vs difflogic comparison
+
+| top-k | difflogic F1 | logistic F1 | winner |
+| ---: | ---: | ---: | --- |
+| 1 | 0.850 | 0.850 | tie |
+| 2 | 0.850 | 0.850 | tie |
+| 4 | 0.856 | 0.873 | logistic +0.017 |
+| 8 | **0.893** | **0.893** | tie |
+| 16 | 0.893 | 0.904 | logistic +0.011 |
+| 32 | 0.875 | **0.914** | logistic +0.039 |
+
+Logistic regression is strictly better or equal at every top-k and pulls further ahead as k grows. At top-8 they are essentially tied (F1=0.893 each). The key difference is **interpretability**: the difflogic circuit gives a human-readable Boolean formula (`i1 AND (i2 OR i4 OR i5)`), while the logistic classifier gives a weighted sum — less readable, but it can assign soft importance to every feature rather than forcing hard AND/OR gates.
+
+The weights also validate the circuit structure: `i1` dominates (weight ~2–4×) across all top-k settings, confirming it really is the primary gate. `i5` (sexually suggestive imagery) and `i15` (SAE 8837) rank highly at top-16/32 — `i15`'s high weight is a polysemanticity flag worth investigating on Neuronpedia.
+
 ### Gemma Feature Meanings
 
 The Gemma Scope circuits use Neuronpedia explanations, so `i1`, `i2`, etc. can be read as interpretable feature meanings:
