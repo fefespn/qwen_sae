@@ -381,6 +381,157 @@ def train_logistic_classifier(
     }
 
 
+def _firing_arrays(
+    train_firing: torch.Tensor,
+    train_labels: torch.Tensor,
+    eval_firing: torch.Tensor,
+    eval_labels: torch.Tensor,
+    feature_ids: Sequence[int],
+):
+    ids = torch.as_tensor(list(feature_ids), dtype=torch.long)
+    return (
+        train_firing.index_select(1, ids).float().numpy(),
+        train_labels.long().numpy(),
+        eval_firing.index_select(1, ids).float().numpy(),
+        eval_labels.long().numpy(),
+    )
+
+
+def _sklearn_result(name: str, clf, feature_ids, x_train, y_train, x_eval, y_eval, extra: dict | None = None) -> dict[str, Any]:
+    def _m(x, y):
+        y_pred = clf.predict(x).astype(bool)
+        return binary_metrics(torch.as_tensor(y, dtype=torch.bool), torch.as_tensor(y_pred, dtype=torch.bool))
+    train_m = _m(x_train, y_train)
+    eval_m = _m(x_eval, y_eval)
+    return {
+        "classifier": name,
+        "feature_ids": list(map(int, feature_ids)),
+        **(extra or {}),
+        "train_metrics": asdict(train_m),
+        "eval_metrics": asdict(eval_m),
+        "eval_hard_metrics": asdict(eval_m),
+        "eval_soft_metrics": asdict(eval_m),
+    }
+
+
+def train_decision_tree_classifier(
+    train_firing: torch.Tensor,
+    train_labels: torch.Tensor,
+    eval_firing: torch.Tensor,
+    eval_labels: torch.Tensor,
+    *,
+    feature_ids: Sequence[int],
+    args: argparse.Namespace,
+) -> dict[str, Any]:
+    from sklearn.tree import DecisionTreeClassifier, export_text
+
+    x_train, y_train, x_eval, y_eval = _firing_arrays(train_firing, train_labels, eval_firing, eval_labels, feature_ids)
+    clf = DecisionTreeClassifier(
+        max_depth=getattr(args, "tree_max_depth", 6),
+        random_state=args.seed,
+    )
+    clf.fit(x_train, y_train)
+    feature_names = [f"i{i+1}" for i in range(len(feature_ids))]
+    tree_text = export_text(clf, feature_names=feature_names)
+    importances = {f"i{i+1}": {"feature_id": int(feature_ids[i]), "importance": round(float(v), 6)}
+                   for i, v in enumerate(clf.feature_importances_)}
+    imp_sorted = sorted(importances.items(), key=lambda kv: kv[1]["importance"], reverse=True)
+    return _sklearn_result("decision_tree", clf, feature_ids, x_train, y_train, x_eval, y_eval, extra={
+        "max_depth": int(clf.get_depth()),
+        "n_leaves": int(clf.get_n_leaves()),
+        "feature_importances": importances,
+        "feature_importances_sorted": [{"input": k, **v} for k, v in imp_sorted],
+        "tree_text": tree_text,
+    })
+
+
+def train_naive_bayes_classifier(
+    train_firing: torch.Tensor,
+    train_labels: torch.Tensor,
+    eval_firing: torch.Tensor,
+    eval_labels: torch.Tensor,
+    *,
+    feature_ids: Sequence[int],
+    args: argparse.Namespace,
+) -> dict[str, Any]:
+    from sklearn.naive_bayes import BernoulliNB
+
+    x_train, y_train, x_eval, y_eval = _firing_arrays(train_firing, train_labels, eval_firing, eval_labels, feature_ids)
+    clf = BernoulliNB(alpha=getattr(args, "nb_alpha", 1.0))
+    clf.fit(x_train, y_train)
+    log_ratios = (clf.feature_log_prob_[1] - clf.feature_log_prob_[0]).tolist()
+    ratios = {f"i{i+1}": {"feature_id": int(feature_ids[i]), "log_ratio": round(log_ratios[i], 6)}
+              for i in range(len(feature_ids))}
+    ratios_sorted = sorted(ratios.items(), key=lambda kv: abs(kv[1]["log_ratio"]), reverse=True)
+    return _sklearn_result("naive_bayes", clf, feature_ids, x_train, y_train, x_eval, y_eval, extra={
+        "log_ratios": ratios,
+        "log_ratios_sorted": [{"input": k, **v} for k, v in ratios_sorted],
+    })
+
+
+def train_xgboost_classifier(
+    train_firing: torch.Tensor,
+    train_labels: torch.Tensor,
+    eval_firing: torch.Tensor,
+    eval_labels: torch.Tensor,
+    *,
+    feature_ids: Sequence[int],
+    args: argparse.Namespace,
+) -> dict[str, Any]:
+    from xgboost import XGBClassifier
+
+    x_train, y_train, x_eval, y_eval = _firing_arrays(train_firing, train_labels, eval_firing, eval_labels, feature_ids)
+    clf = XGBClassifier(
+        n_estimators=getattr(args, "xgb_n_estimators", 200),
+        max_depth=getattr(args, "xgb_max_depth", 4),
+        learning_rate=getattr(args, "xgb_lr", 0.1),
+        subsample=0.8,
+        use_label_encoder=False,
+        eval_metric="logloss",
+        random_state=args.seed,
+        verbosity=0,
+    )
+    clf.fit(x_train, y_train, eval_set=[(x_eval, y_eval)], verbose=False)
+    importances = {f"i{i+1}": {"feature_id": int(feature_ids[i]), "importance": round(float(v), 6)}
+                   for i, v in enumerate(clf.feature_importances_)}
+    imp_sorted = sorted(importances.items(), key=lambda kv: kv[1]["importance"], reverse=True)
+    return _sklearn_result("xgboost", clf, feature_ids, x_train, y_train, x_eval, y_eval, extra={
+        "n_estimators": int(clf.n_estimators),
+        "max_depth": int(clf.max_depth),
+        "feature_importances": importances,
+        "feature_importances_sorted": [{"input": k, **v} for k, v in imp_sorted],
+    })
+
+
+def train_mlp_classifier(
+    train_firing: torch.Tensor,
+    train_labels: torch.Tensor,
+    eval_firing: torch.Tensor,
+    eval_labels: torch.Tensor,
+    *,
+    feature_ids: Sequence[int],
+    args: argparse.Namespace,
+) -> dict[str, Any]:
+    from sklearn.neural_network import MLPClassifier
+
+    x_train, y_train, x_eval, y_eval = _firing_arrays(train_firing, train_labels, eval_firing, eval_labels, feature_ids)
+    hidden = getattr(args, "mlp_hidden", (64, 32))
+    clf = MLPClassifier(
+        hidden_layer_sizes=hidden,
+        max_iter=500,
+        random_state=args.seed,
+        early_stopping=True,
+        validation_fraction=0.1,
+        n_iter_no_change=20,
+    )
+    clf.fit(x_train, y_train)
+    return _sklearn_result("mlp", clf, feature_ids, x_train, y_train, x_eval, y_eval, extra={
+        "hidden_layer_sizes": list(hidden),
+        "n_iter": clf.n_iter_,
+        "best_validation_score": round(float(clf.best_validation_score_), 6),
+    })
+
+
 def attach_feature_meanings_to_logic_result(
     logic_result: dict[str, Any] | None,
     *,
@@ -453,6 +604,10 @@ def save_results(
         "or_metrics": asdict(or_metrics),
         "logic_classifier": logic_result if args.classifier == "difflogic" else None,
         "logistic_classifier": logic_result if args.classifier == "logistic" else None,
+        "decision_tree_classifier": logic_result if args.classifier == "decision_tree" else None,
+        "naive_bayes_classifier": logic_result if args.classifier == "naive_bayes" else None,
+        "xgboost_classifier": logic_result if args.classifier == "xgboost" else None,
+        "mlp_classifier": logic_result if args.classifier == "mlp" else None,
         "metrics": asdict(metrics),
     }
     os.makedirs(os.path.dirname(os.path.abspath(path)) or ".", exist_ok=True)
@@ -527,8 +682,17 @@ def main() -> None:
     parser.add_argument("--firing-cache-dir", default=str(DEFAULT_OUT_DIR / "firing_cache"))
     parser.add_argument("--no-firing-cache", action="store_true")
     parser.add_argument("--save-ranked-top-k", type=int, default=50)
-    parser.add_argument("--classifier", choices=("or", "difflogic", "logistic"), default="or")
-    parser.add_argument("--logistic-c", type=float, default=1.0, help="Inverse regularisation strength for logistic regression")
+    parser.add_argument("--classifier",
+                        choices=("or", "difflogic", "logistic", "decision_tree", "naive_bayes", "xgboost", "mlp"),
+                        default="or")
+    parser.add_argument("--logistic-c", type=float, default=1.0)
+    parser.add_argument("--tree-max-depth", type=int, default=6)
+    parser.add_argument("--nb-alpha", type=float, default=1.0)
+    parser.add_argument("--xgb-n-estimators", type=int, default=200)
+    parser.add_argument("--xgb-max-depth", type=int, default=4)
+    parser.add_argument("--xgb-lr", type=float, default=0.1)
+    parser.add_argument("--mlp-hidden", type=str, default="64,32",
+                        help="Comma-separated hidden layer sizes for MLP, e.g. 64,32")
     parser.add_argument("--difflogic-path", default=str(Path(__file__).resolve().parents[1] / "difflogic"))
     parser.add_argument("--logic-output", choices=("binary", "groupsum"), default="binary")
     parser.add_argument("--logic-dims", default=None)
@@ -544,6 +708,7 @@ def main() -> None:
     parser.add_argument("--logic-seed", type=int, default=0)
     parser.add_argument("--logic-print-every", type=int, default=25)
     args = parser.parse_args()
+    args.mlp_hidden = tuple(int(x) for x in args.mlp_hidden.split(",") if x.strip())
 
     if args.neuronpedia_cache is None:
         args.neuronpedia_cache = str(default_neuronpedia_cache_path(args.neuronpedia_model, args.neuronpedia_source))
@@ -675,12 +840,32 @@ def main() -> None:
         )
     elif args.classifier == "logistic":
         logic_result = train_logistic_classifier(
-            discovery_firing,
-            discovery_labels,
-            eval_firing,
-            eval_labels,
-            feature_ids=feature_ids,
-            args=args,
+            discovery_firing, discovery_labels, eval_firing, eval_labels,
+            feature_ids=feature_ids, args=args,
+        )
+        metrics = Metrics(**logic_result["eval_hard_metrics"])
+    elif args.classifier == "decision_tree":
+        logic_result = train_decision_tree_classifier(
+            discovery_firing, discovery_labels, eval_firing, eval_labels,
+            feature_ids=feature_ids, args=args,
+        )
+        metrics = Metrics(**logic_result["eval_hard_metrics"])
+    elif args.classifier == "naive_bayes":
+        logic_result = train_naive_bayes_classifier(
+            discovery_firing, discovery_labels, eval_firing, eval_labels,
+            feature_ids=feature_ids, args=args,
+        )
+        metrics = Metrics(**logic_result["eval_hard_metrics"])
+    elif args.classifier == "xgboost":
+        logic_result = train_xgboost_classifier(
+            discovery_firing, discovery_labels, eval_firing, eval_labels,
+            feature_ids=feature_ids, args=args,
+        )
+        metrics = Metrics(**logic_result["eval_hard_metrics"])
+    elif args.classifier == "mlp":
+        logic_result = train_mlp_classifier(
+            discovery_firing, discovery_labels, eval_firing, eval_labels,
+            feature_ids=feature_ids, args=args,
         )
         metrics = Metrics(**logic_result["eval_hard_metrics"])
 
@@ -701,14 +886,29 @@ def main() -> None:
     print("or rule metrics:")
     print(json.dumps(asdict(or_metrics), indent=2))
     if logic_result is not None:
-        label = "difflogic" if args.classifier == "difflogic" else "logistic"
-        print(f"{label} eval metrics:")
+        print(f"{args.classifier} eval metrics:")
         print(json.dumps(logic_result["eval_hard_metrics"], indent=2))
         if args.classifier == "logistic":
-            print(f"{label} weights (sorted by magnitude):")
+            print("weights (sorted by magnitude):")
             for entry in logic_result["weights_sorted_by_magnitude"]:
                 print(f"  {entry['input']} fid={entry['feature_id']}  weight={entry['weight']:+.4f}")
-        else:
+        elif args.classifier == "decision_tree":
+            print(f"tree depth={logic_result['max_depth']}  leaves={logic_result['n_leaves']}")
+            print("feature importances (sorted):")
+            for entry in logic_result["feature_importances_sorted"][:10]:
+                print(f"  {entry['input']} fid={entry['feature_id']}  importance={entry['importance']:.4f}")
+            print(logic_result["tree_text"])
+        elif args.classifier == "naive_bayes":
+            print("log P(toxic)/P(clean) ratios (sorted by magnitude):")
+            for entry in logic_result["log_ratios_sorted"]:
+                print(f"  {entry['input']} fid={entry['feature_id']}  log_ratio={entry['log_ratio']:+.4f}")
+        elif args.classifier == "xgboost":
+            print("feature importances (sorted):")
+            for entry in logic_result["feature_importances_sorted"][:10]:
+                print(f"  {entry['input']} fid={entry['feature_id']}  importance={entry['importance']:.4f}")
+        elif args.classifier == "mlp":
+            print(f"hidden={logic_result['hidden_layer_sizes']}  iters={logic_result['n_iter']}  best_val={logic_result['best_validation_score']:.4f}")
+        elif args.classifier == "difflogic":
             print("difflogic soft eval metrics:")
             print(json.dumps(logic_result["eval_soft_metrics"], indent=2))
     save_results(

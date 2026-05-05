@@ -253,6 +253,41 @@ Logistic regression is strictly better or equal at every top-k and pulls further
 
 The weights also validate the circuit structure: `i1` dominates (weight ~2–4×) across all top-k settings, confirming it really is the primary gate. `i5` (sexually suggestive imagery) and `i15` (SAE 8837) rank highly at top-16/32 — `i15`'s high weight is a polysemanticity flag worth investigating on Neuronpedia.
 
+### Full Classifier Comparison (Gemma Layer 20)
+
+We compared all classifiers on the same top-k SAE boolean firing vectors. Metric is F1 on the held-out eval split (1000 examples, balanced). Bold = best for that top-k.
+
+| top-k | OR | Naive Bayes | Logistic | Diff-Logic | Decision Tree | XGBoost | MLP |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 | 0.850 | **0.850** | **0.850** | 0.850 | **0.850** | **0.850** | **0.850** |
+| 2 | 0.828 | 0.776 | **0.850** | 0.850 | **0.850** | **0.850** | 0.776 |
+| 4 | 0.774 | 0.854 | 0.873 | 0.856 | **0.874** | **0.874** | 0.854 |
+| 8 | 0.738 | 0.883 | **0.893** | **0.893** | 0.887 | 0.890 | **0.893** |
+| 16 | 0.698 | 0.887 | 0.904 | 0.893 | 0.893 | **0.908** | 0.897 |
+| 32 | 0.679 | 0.898 | 0.914 | 0.875 | 0.889 | **0.928** | 0.917 |
+
+**XGBoost wins overall**, peaking at F1=0.928 / Accuracy=0.927 at top-32. MLP is close behind (0.917). Logistic regression is the best linear model. Decision tree slightly underperforms logistic because hard threshold splits are weaker than weighted sums when features overlap in information.
+
+**Interpretability vs performance trade-off:**
+
+| Classifier | Interpretable? | Top-32 F1 | Notes |
+| --- | :---: | ---: | --- |
+| OR baseline | ✅ (trivial) | 0.679 | any-feature fires → toxic |
+| Naive Bayes | ✅ (log ratios) | 0.898 | independence assumption hurts with correlated features |
+| Logistic regression | ✅ (weights) | 0.914 | weighted sum, readable per-feature importance |
+| **Diff-Logic** | ✅✅ (Boolean formula) | 0.875 | human-readable circuit, compact at top-8 |
+| Decision Tree | ✅ (tree rules) | 0.889 | readable but gets complex past depth 4 |
+| MLP | ❌ | 0.917 | black box, no feature-level explanation |
+| XGBoost | ❌ | **0.928** | black box, feature importance only approximate |
+
+Run any classifier with:
+
+```bash
+qwen/.venv/bin/python qwen/gemma_scope_toxicity_classifier.py \
+  --language en --layer 20 --top-k-features 32 \
+  --classifier xgboost   # or: naive_bayes, logistic, decision_tree, mlp, difflogic
+```
+
 ### Gemma Feature Meanings
 
 The Gemma Scope circuits use Neuronpedia explanations, so `i1`, `i2`, etc. can be read as interpretable feature meanings:
