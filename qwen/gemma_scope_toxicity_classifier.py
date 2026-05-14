@@ -94,6 +94,66 @@ def firing_cache_path(args: argparse.Namespace, *, split: str, text_key: str, la
     return Path(args.firing_cache_dir) / name
 
 
+def hidden_cache_metadata(args: argparse.Namespace, *, split: str, text_key: str, label_key: str) -> dict[str, Any]:
+    """Metadata for the max-pooled hidden-state cache (no SAE, no epsilon)."""
+    return {
+        "version": 1,
+        "type": "hidden_maxpool",
+        "split": split,
+        "model": args.model,
+        "dataset": args.dataset,
+        "language": args.language,
+        "layer": args.layer,
+        "discovery_per_class": args.discovery_per_class,
+        "eval_per_class": args.eval_per_class,
+        "max_length": args.max_length,
+        "seed": args.seed,
+        "text_key": text_key,
+        "label_key": label_key,
+    }
+
+
+def hidden_cache_path(args: argparse.Namespace, *, split: str, text_key: str, label_key: str) -> Path:
+    meta = hidden_cache_metadata(args, split=split, text_key=text_key, label_key=label_key)
+    encoded = json.dumps(meta, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    digest = hashlib.sha256(encoded).hexdigest()[:16]
+    name = f"gemma_scope_layer{args.layer}_{args.language}_{split}_hidden_{digest}.pt"
+    return Path(args.firing_cache_dir) / name
+
+
+def load_hidden_cache(path: Path, expected_meta: dict[str, Any]) -> tuple[torch.Tensor, torch.Tensor] | None:
+    """Load [N, hidden_dim] float16 hidden states + bool labels, or return None."""
+    if not path.exists():
+        return None
+    try:
+        payload = torch.load(path, map_location="cpu", weights_only=False)
+    except Exception as e:
+        print(f"ignoring unreadable hidden cache {path}: {e}")
+        return None
+    if not isinstance(payload, dict) or payload.get("metadata") != expected_meta:
+        print(f"ignoring stale hidden cache {path}")
+        return None
+    hidden = payload.get("hidden")
+    labels = payload.get("labels")
+    if not isinstance(hidden, torch.Tensor) or not isinstance(labels, torch.Tensor):
+        return None
+    print(f"loaded {expected_meta['split']} hidden cache: {path}  shape={tuple(hidden.shape)}")
+    return hidden.float(), labels.bool()
+
+
+def save_hidden_cache(path: Path, metadata: dict[str, Any], hidden: torch.Tensor, labels: torch.Tensor) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    torch.save(
+        {
+            "metadata": metadata,
+            "hidden": hidden.cpu().half(),   # float16 to save disk space
+            "labels": labels.cpu().bool(),
+        },
+        path,
+    )
+    print(f"saved {metadata['split']} hidden cache: {path}  shape={tuple(hidden.shape)}")
+
+
 class GemmaScopeSAE:
     """Small SAELens wrapper for Gemma Scope residual SAEs."""
 
@@ -211,6 +271,48 @@ def collect_firing(
         all_firing.append(firing)
         all_labels.append(torch.tensor(labels, dtype=torch.bool))
     return torch.cat(all_firing, dim=0), torch.cat(all_labels, dim=0)
+
+
+@torch.no_grad()
+def collect_hidden(
+    examples: Sequence[dict[str, Any]],
+    *,
+    model: Any,
+    tokenizer: Any,
+    layer: int,
+    text_key: str,
+    label_key: str,
+    batch_size: int,
+    max_length: int,
+) -> tuple[torch.Tensor, torch.Tensor]:
+    """Collect max-pooled hidden states at `layer` — shape [N, hidden_dim] float32."""
+    model_device = next(model.parameters()).device
+    all_hidden: list[torch.Tensor] = []
+    all_labels: list[torch.Tensor] = []
+    for batch in tqdm(list(iter_batches(examples, batch_size)), desc="collecting hidden states"):
+        texts  = [str(row[text_key]) for row in batch]
+        labels = [int(row[label_key]) for row in batch]
+        toks = tokenizer(
+            texts,
+            return_tensors="pt",
+            padding=True,
+            truncation=True,
+            max_length=max_length,
+        )
+        toks = {k: v.to(model_device) for k, v in toks.items()}
+        hidden = capture_layer_hidden(
+            model,
+            input_ids=toks["input_ids"],
+            attention_mask=toks["attention_mask"],
+            layer=layer,
+        )  # [batch, seq_len, hidden_dim]
+        # mask padding tokens before max-pool
+        mask = toks["attention_mask"].unsqueeze(-1).to(hidden.device, dtype=torch.bool)
+        hidden = hidden.masked_fill(~mask, float("-inf"))
+        maxpool = hidden.max(dim=1).values.cpu().float()  # [batch, hidden_dim]
+        all_hidden.append(maxpool)
+        all_labels.append(torch.tensor(labels, dtype=torch.bool))
+    return torch.cat(all_hidden, dim=0), torch.cat(all_labels, dim=0)
 
 
 def fetch_neuronpedia_feature(model_id: str, source: str, feature_id: int, *, timeout: float = 10.0) -> dict[str, Any]:
@@ -681,6 +783,8 @@ def main() -> None:
     parser.add_argument("--out-dir", default=str(DEFAULT_OUT_DIR))
     parser.add_argument("--firing-cache-dir", default=str(DEFAULT_OUT_DIR / "firing_cache"))
     parser.add_argument("--no-firing-cache", action="store_true")
+    parser.add_argument("--collect-hidden", action="store_true",
+                        help="Also collect and cache max-pooled hidden states for SAE distillation")
     parser.add_argument("--save-ranked-top-k", type=int, default=50)
     parser.add_argument("--classifier",
                         choices=("or", "difflogic", "logistic", "decision_tree", "naive_bayes", "xgboost", "mlp"),
@@ -815,6 +919,47 @@ def main() -> None:
             )
     else:
         eval_firing, eval_labels = eval_cached
+
+    # ── optional hidden-state collection for SAE distillation ────────────────
+    if getattr(args, "collect_hidden", False):
+        disc_hmeta = hidden_cache_metadata(args, split="discovery", text_key=text_key, label_key=label_key)
+        eval_hmeta = hidden_cache_metadata(args, split="eval",      text_key=text_key, label_key=label_key)
+        disc_hpath = hidden_cache_path(args, split="discovery", text_key=text_key, label_key=label_key)
+        eval_hpath = hidden_cache_path(args, split="eval",      text_key=text_key, label_key=label_key)
+
+        disc_hcached = load_hidden_cache(disc_hpath, disc_hmeta) if not args.no_firing_cache else None
+        eval_hcached = load_hidden_cache(eval_hpath, eval_hmeta) if not args.no_firing_cache else None
+
+        if disc_hcached is None or eval_hcached is None:
+            # load model if not already loaded
+            if model is None:
+                disable_broken_torchvision_import()
+                from transformers import AutoModelForCausalLM, AutoTokenizer as _AT
+                device = choose_device(args.device)
+                tokenizer = _AT.from_pretrained(args.model)
+                if tokenizer.pad_token is None:
+                    tokenizer.pad_token = tokenizer.eos_token
+                model = AutoModelForCausalLM.from_pretrained(args.model, torch_dtype="auto").to(device)
+                model.eval()
+
+        if disc_hcached is None:
+            disc_hidden, _ = collect_hidden(
+                discovery, model=model, tokenizer=tokenizer, layer=args.layer,
+                text_key=text_key, label_key=label_key,
+                batch_size=args.batch_size, max_length=args.max_length,
+            )
+            if not args.no_firing_cache:
+                save_hidden_cache(disc_hpath, disc_hmeta, disc_hidden, discovery_labels)
+        if eval_hcached is None:
+            eval_hidden, _ = collect_hidden(
+                evaluation, model=model, tokenizer=tokenizer, layer=args.layer,
+                text_key=text_key, label_key=label_key,
+                batch_size=args.batch_size, max_length=args.max_length,
+            )
+            if not args.no_firing_cache:
+                save_hidden_cache(eval_hpath, eval_hmeta, eval_hidden, eval_labels)
+
+        print(f"hidden-state caches ready: {disc_hpath.name}, {eval_hpath.name}")
 
     or_pred = predict_from_firing(eval_firing, feature_ids)
     or_metrics = binary_metrics(eval_labels, or_pred)

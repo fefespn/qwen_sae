@@ -401,6 +401,168 @@ To regenerate or sample more examples:
 qwen/.venv/bin/python qwen/analyze_gemma_top8_errors.py --n-fn 20 --n-fp 20
 ```
 
+## SAE Feature Distillation
+
+### The Idea
+
+All the experiments above require running the SAE encoder at inference time to get the feature firing vector. Can we bypass the SAE entirely and learn a Boolean circuit that maps **raw LLM hidden-state neurons directly to toxic/clean** — with no SAE encoder needed?
+
+We train this in two phases using `gemma_sae_distill.py`:
+
+**Phase 1 — Pretrain per-feature circuits** (`neurons → SAE feature fires?`):
+For each of the 8 SAE features selected by the top-8 difflogic experiment, we train a small difflogic circuit:
+```
+hidden [N, 256]  →  LearnedThreshold (per-neuron τ)  →  binary  →  feature_circuit_i  →  0/1
+```
+The 256 neurons are selected from the 2304-dim Gemma hidden state by ranking `|mean(toxic) - mean(clean)|` and keeping the top-256.
+
+**Phase 2 — Joint end-to-end fine-tuning** (`neurons → toxic`):
+All 8 feature circuits and a new toxicity head are stacked and fine-tuned jointly on toxicity labels:
+```
+hidden  →  [8 × (threshold + feature_circuit)]  →  8 soft bits  →  toxicity_circuit  →  toxic/clean
+```
+The result is a **single Boolean circuit**: raw Gemma neurons → toxic/clean, with no SAE.
+
+### Architecture
+
+```
+Neuron pre-selection:   top-256 from 2304-dim hidden state (layer 20)
+Feature circuit arch:   256 → 128 → 64 → 32 → 16 → 8 → 4 → 2 → 1
+Toxicity circuit arch:  8 → 4 → 2 → 1
+Temperature annealing:  2.0 → 0.1 over training
+```
+
+### Results
+
+| Phase | F1 | Accuracy | Precision | Recall | TP | FP | TN | FN |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Pretrain only (best feature: i1) | 0.502 | 0.663 | — | — | 170 | 145 | 493 | 192 |
+| End-to-end fine-tuned | **0.851** | **0.855** | **0.874** | **0.830** | **415** | **60** | **440** | **85** |
+
+Fine-tuning lifts F1 from 0.502 → **0.851**, very close to the SAE-feature baseline (F1=0.893). The model learned to predict toxicity from raw neurons without ever seeing the SAE.
+
+For reference:
+
+| Method | Inputs | F1 |
+| --- | --- | ---: |
+| Difflogic on SAE features (top-8) | 8 SAE feature bits | 0.893 |
+| **Distilled difflogic (end-to-end)** | **256 raw neurons** | **0.851** |
+| Logistic regression on SAE features (top-8) | 8 SAE feature bits | 0.893 |
+
+### Discovered Toxicity Circuit
+
+After Phase 2, the learned SAE-level toxicity circuit is:
+
+```text
+toxic = ((i3 OR i4) AND ((i2 AND i6) AND (i1 OR i8)))
+```
+
+Where i1..i8 are the predicted SAE feature bits (outputs of the 8 feature circuits):
+
+| Bit | SAE Feature | Meaning |
+| --- | ---: | --- |
+| `i1` | 13324 | expressions of strong emotions and expletives |
+| `i2` | 2746 | terms and concepts related to fraudulent activities |
+| `i3` | 7579 | expressions of frustration and criticism towards political figures |
+| `i4` | 13135 | expressions of negativity or unfavorable situations |
+| `i6` | 5067 | phrases expressing skepticism or criticism of societal views |
+| `i8` | 3234 | specific references to criminal cases and legal terminology |
+
+Reading the formula: toxic when **(frustration/politics OR negativity) AND (fraud AND skepticism) AND (expletives OR criminal-law)**.
+
+Each feature bit `i1..i8` is itself a Boolean circuit over the top-256 raw hidden neurons. For example, the circuit for `i1` (expletives gate):
+
+```text
+(((((((NOT n142 AND (n4 AND NOT n166)) -> (n98 AND n47)) AND ...) [256-neuron Boolean formula]
+```
+
+The full end-to-end chain — 256 neurons → toxic/clean — is a single inlined Boolean expression.
+
+### How to Run
+
+Full pipeline (Phase 1 + Phase 2):
+
+```bash
+python qwen/gemma_sae_distill.py \
+    --top-neurons 256 \
+    --pretrain-epochs 200 \
+    --finetune-epochs 300 \
+    --print-every 50
+```
+
+Resume from Phase 1 checkpoint (skip pretrain):
+
+```bash
+python qwen/gemma_sae_distill.py --resume-pretrain --finetune-epochs 300
+```
+
+Checkpoints are saved to:
+
+```text
+qwen/out/distill_checkpoints/pretrain_checkpoint.pt
+qwen/out/distill_checkpoints/finetuned_model.pt
+```
+
+Results JSON:
+
+```text
+qwen/out/gemma_sae_distill_results.json
+```
+
+### Yosys Export for the Distilled Circuit
+
+Export the SAE-level toxicity circuit (`i1..i8 → toxic`) as Verilog:
+
+```bash
+python qwen/yosys_logic_export.py \
+    qwen/out/gemma_sae_distill_results.json \
+    --distill --circuit toxicity --skip-yosys
+```
+
+Export the **full end-to-end circuit** (256 neurons → toxic) as Verilog:
+
+```bash
+python qwen/yosys_logic_export.py \
+    qwen/out/gemma_sae_distill_results.json \
+    --distill --circuit full --skip-yosys
+```
+
+Export all circuits (toxicity + 8 feature circuits + full) and run Yosys optimization:
+
+```bash
+python qwen/yosys_logic_export.py \
+    qwen/out/gemma_sae_distill_results.json \
+    --distill --circuit all
+```
+
+Outputs land in:
+
+```text
+qwen/out/yosys/gemma_sae_distill_results/
+  toxic_circuit.v          # i1..i8 → toxic (SAE-level, compact)
+  toxic_circuit_opt.v      # Yosys-optimized version
+  toxic_circuit_full.v     # 256 neurons → toxic (fully inlined)
+  toxic_circuit_full_opt.v # Yosys-optimized full circuit
+  feature_i1.v             # neuron bits → i1 (expletives feature)
+  ...
+```
+
+The compact toxicity circuit Verilog:
+
+```verilog
+// toxic = ((i3 OR i4) AND ((i2 AND i6) AND (i1 OR i8)))
+// i1 = SAE feat meaning: expressions of strong emotions and expletives
+// i2 = SAE feat meaning: terms and concepts related to fraudulent activities
+// ...
+
+module toxic_circuit(
+    input wire i1, i2, i3, i4, i5, i6, i7, i8,
+    output wire toxic
+);
+    assign toxic = ((i3 | i4) & ((i2 & i6) & (i1 | i8)));
+endmodule
+```
+
 ## Binary Toxic Circuit
 
 The difflogic experiment uses a **single hard binary toxic circuit**:
