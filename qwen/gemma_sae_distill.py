@@ -34,6 +34,7 @@ qwen/.venv/bin/python qwen/gemma_sae_distill.py --skip-finetune
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import os
 import sys
@@ -319,23 +320,21 @@ def finetune_end_to_end(
     temperature_final: float,
     print_every: int,
 ) -> list[dict[str, Any]]:
-    """Fine-tune the entire stack end-to-end on toxicity labels."""
+    """Fine-tune the entire stack end-to-end on toxicity labels. Restores best F1 weights."""
     loss_fn = nn.BCELoss()
     x_disc_dev = x_disc.to(device)
     y_disc_dev = y_disc.float().to(device)
     x_eval_dev = x_eval.to(device)
 
-    # reset temperature on all thresholds
     for t in model.thresholds:
         t.temperature = temperature
 
     opt = torch.optim.Adam([
         {"params": model.toxicity_circuit.parameters(), "lr": lr},
-        *[{"params": c.parameters(),                    "lr": lr}
-          for c in model.feature_circuits],
-        *[{"params": t.parameters(),                    "lr": threshold_lr}
-          for t in model.thresholds],
+        *[{"params": c.parameters(), "lr": lr} for c in model.feature_circuits],
+        *[{"params": t.parameters(), "lr": threshold_lr} for t in model.thresholds],
     ])
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=epochs, eta_min=lr * 0.05)
 
     loader = torch.utils.data.DataLoader(
         torch.utils.data.TensorDataset(x_disc_dev, y_disc_dev),
@@ -345,6 +344,9 @@ def finetune_end_to_end(
     print(f"\n  Joint fine-tuning  (epochs={epochs}  lr={lr}  thr_lr={threshold_lr})")
     losses = []
     snapshots = []
+    best_f1 = -1.0
+    best_state = None
+
     for epoch in range(1, epochs + 1):
         t = temperature + (temperature_final - temperature) * (epoch / epochs)
         for thresh in model.thresholds:
@@ -356,19 +358,183 @@ def finetune_end_to_end(
             loss = loss_fn(out, by)
             opt.zero_grad(); loss.backward(); opt.step()
             epoch_loss += float(loss) * bx.shape[0]
+        scheduler.step()
         losses.append(epoch_loss / len(y_disc))
+
+        # track best hard-circuit F1
+        m = eval_model(model, x_eval_dev, y_eval)
+        if m.f1 > best_f1:
+            best_f1 = m.f1
+            best_state = copy.deepcopy(model.state_dict())
+
         if print_every and (epoch == 1 or epoch % print_every == 0):
-            m = eval_model(model, x_eval_dev, y_eval)
             print(f"    epoch={epoch:4d}  loss={losses[-1]:.5f}  "
                   f"eval → acc={m.accuracy:.3f}  f1={m.f1:.3f}  "
-                  f"TP={m.tp}  FP={m.fp}  TN={m.tn}  FN={m.fn}")
+                  f"TP={m.tp}  FP={m.fp}  TN={m.tn}  FN={m.fn}"
+                  f"  [best={best_f1:.3f}]")
             snapshots.append({"epoch": epoch, "loss": losses[-1], "eval": asdict(m)})
 
+    # restore best weights
+    model.load_state_dict(best_state)
     final = eval_model(model, x_eval_dev, y_eval)
-    print(f"\n  Final eval → acc={final.accuracy:.3f}  prec={final.precision:.3f}  "
+    print(f"\n  Restored best weights → acc={final.accuracy:.3f}  prec={final.precision:.3f}  "
           f"rec={final.recall:.3f}  f1={final.f1:.3f}  "
           f"TP={final.tp}  FP={final.fp}  TN={final.tn}  FN={final.fn}")
     return snapshots
+
+
+# ── Phase 3: evolutionary hill-climbing on gate types ────────────────────
+
+def _get_logic_layers(model: DistilledToxicityModel):
+    """Yield all LogicLayer modules in the model."""
+    for mod in model.modules():
+        if type(mod).__name__ == "LogicLayer":
+            yield mod
+
+
+def _all_gates(model: DistilledToxicityModel) -> list[tuple[nn.Module, int]]:
+    """Return list of (layer, gate_index) for every gate in the model."""
+    gates = []
+    for layer in _get_logic_layers(model):
+        for g in range(layer.weights.shape[0]):
+            gates.append((layer, g))
+    return gates
+
+
+def _current_gate_type(layer: nn.Module, g: int) -> int:
+    return int(layer.weights.data[g].argmax().item())
+
+
+def _set_gate_type(layer: nn.Module, g: int, gate_type: int) -> None:
+    w = torch.zeros(16, device=layer.weights.device)
+    w[gate_type] = 10.0
+    layer.weights.data[g] = w
+
+
+def evolve_circuits(
+    model: DistilledToxicityModel,
+    x_eval: torch.Tensor,
+    y_eval: torch.Tensor,
+    *,
+    device: torch.device,
+    n_random_iters: int = 2000,
+    mutation_size_min: int = 2,
+    mutation_size_max: int = 8,
+    n_greedy_passes: int = 3,
+    seed: int = 0,
+) -> Metrics:
+    """Phase 3: two-stage evolution.
+
+    Stage A — Random multi-gate mutation (GPU-friendly, exploratory):
+      Each iteration: pick k random gates (k in [min,max]), assign each a random
+      new gate type, do ONE forward pass, keep if F1 improves. Fast because it's
+      1 eval/iter regardless of k, and GPU processes all 1000 examples at once.
+
+    Stage B — Greedy polish (thorough, convergence):
+      For each gate try all 16 types, keep the best. One pass over all gates.
+      Repeat until no gate improves. Used after random search to squeeze out
+      any remaining single-gate improvements.
+    """
+    import time
+    rng = torch.Generator()
+    rng.manual_seed(seed)
+
+    x_eval_dev = x_eval.to(device)
+    model.eval()
+
+    current = eval_model(model, x_eval_dev, y_eval)
+    gates = _all_gates(model)
+    n_gates = len(gates)
+
+    print(f"\n── Phase 3: evolutionary search ──")
+    print(f"  {n_gates} gates total")
+    print(f"  Stage A: {n_random_iters} random mutations "
+          f"(k={mutation_size_min}–{mutation_size_max} gates/iter, 1 eval/iter)")
+    print(f"  Stage B: greedy polish (up to {n_greedy_passes} passes, "
+          f"{n_gates * 16} evals/pass)")
+    print(f"  start → f1={current.f1:.3f}  acc={current.accuracy:.3f}  "
+          f"TP={current.tp}  FP={current.fp}  TN={current.tn}  FN={current.fn}\n")
+
+    # ── Stage A: random multi-gate mutations ──────────────────────────────
+    best_f1 = current.f1
+    n_accepted = 0
+    t0 = time.time()
+    print("  [Stage A] random mutations")
+
+    for it in range(1, n_random_iters + 1):
+        k = int(torch.randint(mutation_size_min, mutation_size_max + 1, (1,), generator=rng).item())
+        chosen_idx = torch.randperm(n_gates, generator=rng)[:k].tolist()
+
+        # save current types and apply random mutations
+        old_types = []
+        for gi in chosen_idx:
+            layer, g = gates[gi]
+            old_types.append(_current_gate_type(layer, g))
+            new_type = int(torch.randint(16, (1,), generator=rng).item())
+            _set_gate_type(layer, g, new_type)
+
+        m = eval_model(model, x_eval_dev, y_eval)
+        if m.f1 > best_f1:
+            best_f1 = m.f1
+            current = m
+            n_accepted += 1
+        else:
+            # revert
+            for gi, old_t in zip(chosen_idx, old_types):
+                layer, g = gates[gi]
+                _set_gate_type(layer, g, old_t)
+
+        if it % 200 == 0:
+            elapsed = time.time() - t0
+            rate = it / elapsed
+            print(f"    iter {it:5d}/{n_random_iters}  accepted={n_accepted}"
+                  f"  f1={current.f1:.3f}  acc={current.accuracy:.3f}"
+                  f"  {elapsed:.0f}s  ({rate:.0f} iter/s)"
+                  f"  ~{(n_random_iters - it) / rate:.0f}s left")
+
+    print(f"  Stage A done → accepted {n_accepted}/{n_random_iters} mutations  "
+          f"f1={current.f1:.3f}  ({time.time()-t0:.1f}s)\n")
+
+    # ── Stage B: greedy polish ────────────────────────────────────────────
+    print("  [Stage B] greedy polish")
+    t0 = time.time()
+    for pass_idx in range(1, n_greedy_passes + 1):
+        n_improved = 0
+        pass_t = time.time()
+        for gi, (layer, g) in enumerate(gates):
+            best_w = layer.weights.data[g].clone()
+            best_f1_gate = current.f1
+            for gate_type in range(16):
+                _set_gate_type(layer, g, gate_type)
+                m = eval_model(model, x_eval_dev, y_eval)
+                if m.f1 > best_f1_gate:
+                    best_f1_gate = m.f1
+                    best_w = layer.weights.data[g].clone()
+            layer.weights.data[g] = best_w
+            if best_f1_gate > current.f1:
+                current = eval_model(model, x_eval_dev, y_eval)
+                n_improved += 1
+
+            if (gi + 1) % 300 == 0:
+                elapsed = time.time() - pass_t
+                rate = (gi + 1) / elapsed if elapsed > 0 else 1
+                print(f"    pass {pass_idx}  gate {gi+1:4d}/{n_gates}"
+                      f"  improved={n_improved}"
+                      f"  f1={current.f1:.3f}"
+                      f"  {elapsed:.0f}s  ~{(n_gates - gi - 1) / rate:.0f}s left")
+
+        print(f"  pass={pass_idx}  gates_improved={n_improved}  "
+              f"f1={current.f1:.3f}  acc={current.accuracy:.3f}  "
+              f"TP={current.tp}  FP={current.fp}  TN={current.tn}  FN={current.fn}  "
+              f"({time.time()-pass_t:.1f}s)")
+        if n_improved == 0:
+            print(f"  converged after {pass_idx} passes")
+            break
+
+    print(f"\n  Final after evolution → acc={current.accuracy:.3f}  prec={current.precision:.3f}  "
+          f"rec={current.recall:.3f}  f1={current.f1:.3f}  "
+          f"TP={current.tp}  FP={current.fp}  TN={current.tn}  FN={current.fn}")
+    return current
 
 
 # ── Hard circuit export ────────────────────────────────────────────────────
@@ -425,13 +591,23 @@ def main() -> None:
     ap.add_argument("--json",          default=str(DEFAULT_JSON))
     ap.add_argument("--cache-dir",     default=str(DEFAULT_CACHE_DIR))
     ap.add_argument("--out-dir",       default=str(DEFAULT_OUT_DIR))
+    ap.add_argument("--out-json",      default=None,
+                    help="Output results JSON path. Default: <out-dir>/gemma_sae_distill_results.json")
     ap.add_argument("--save-dir",      default=str(DEFAULT_SAVE_DIR),
                     help="Directory for checkpoints (pretrain + finetuned model)")
     ap.add_argument("--difflogic-path", default=str(DEFAULT_DIFFLOGIC))
 
+    # explicit cache file overrides (optional; if not set, uses glob in --cache-dir)
+    ap.add_argument("--discovery-firing", default=None, help="Explicit path to discovery firing cache .pt")
+    ap.add_argument("--eval-firing",      default=None, help="Explicit path to eval firing cache .pt")
+    ap.add_argument("--discovery-hidden", default=None, help="Explicit path to discovery hidden cache .pt")
+    ap.add_argument("--eval-hidden",      default=None, help="Explicit path to eval hidden cache .pt")
+
     # resume flags
     ap.add_argument("--resume-pretrain", action="store_true",
                     help="Load pretrain_checkpoint.pt from --save-dir and skip Phase 1")
+    ap.add_argument("--resume-finetuned", action="store_true",
+                    help="Load finetuned_model.pt from --save-dir and skip Phases 1+2 (go straight to evolution)")
     ap.add_argument("--skip-finetune",   action="store_true",
                     help="Skip Phase 2 joint fine-tuning")
 
@@ -464,6 +640,18 @@ def main() -> None:
     ap.add_argument("--device",   default=None)
     ap.add_argument("--seed",     type=int, default=0)
     ap.add_argument("--print-every", type=int, default=50)
+
+    # Phase 3 — evolutionary hill-climbing
+    ap.add_argument("--skip-evolution", action="store_true",
+                    help="Skip Phase 3 evolutionary gate-type hill-climbing")
+    ap.add_argument("--evolution-random-iters", type=int, default=2000,
+                    help="Stage A: number of random multi-gate mutation iters (default: 2000)")
+    ap.add_argument("--evolution-mutation-min", type=int, default=2,
+                    help="Stage A: minimum gates mutated per iteration (default: 2)")
+    ap.add_argument("--evolution-mutation-max", type=int, default=8,
+                    help="Stage A: maximum gates mutated per iteration (default: 8)")
+    ap.add_argument("--evolution-greedy-passes", type=int, default=3,
+                    help="Stage B: max greedy-polish passes over all gates (default: 3)")
     args = ap.parse_args()
 
     torch.manual_seed(args.seed)
@@ -487,32 +675,44 @@ def main() -> None:
     difflogic_path = Path(args.difflogic_path)
 
     # ── load experiment JSON ───────────────────────────────────────────────
-    result     = json.loads(Path(args.json).read_text())
-    features   = result["features"]
+    result      = json.loads(Path(args.json).read_text())
+    features    = result["features"]
     feature_ids = [f["feature_id"] for f in features]
     fm          = result["logic_classifier"]["hard_circuit"]["feature_meanings"]
-    meanings    = {f"i{i+1}": fm[f"i{i+1}"]["top_explanation"] for i in range(len(features))}
+    meanings    = {
+        f"i{i+1}": (fm[f"i{i+1}"].get("top_explanation") or f"feature_{feature_ids[i]}")
+        for i in range(len(features))
+    }
     n_features  = len(feature_ids)
 
-    # ── load caches ────────────────────────────────────────────────────────
-    disc_fire_f = sorted(Path(args.cache_dir).glob("gemma_scope_layer20_en_discovery_firing_*.pt"))
-    eval_fire_f = sorted(Path(args.cache_dir).glob("gemma_scope_layer20_en_eval_firing_*.pt"))
-    disc_hidd_f = sorted(Path(args.cache_dir).glob("gemma_scope_layer20_en_discovery_hidden_*.pt"))
-    eval_hidd_f = sorted(Path(args.cache_dir).glob("gemma_scope_layer20_en_eval_hidden_*.pt"))
-
-    for label, files in [("discovery firing", disc_fire_f), ("eval firing", eval_fire_f),
-                          ("discovery hidden", disc_hidd_f), ("eval hidden", eval_hidd_f)]:
-        if not files:
-            print(f"ERROR: {label} cache not found in {args.cache_dir}")
+    # ── resolve cache paths ────────────────────────────────────────────────
+    def _resolve_cache(explicit: str | None, glob_pattern: str, label: str) -> Path:
+        if explicit:
+            p = Path(explicit)
+            if not p.exists():
+                print(f"ERROR: {label} cache not found: {p}"); sys.exit(1)
+            return p
+        hits = sorted(Path(args.cache_dir).glob(glob_pattern))
+        if not hits:
+            print(f"ERROR: {label} cache not found via glob '{glob_pattern}' in {args.cache_dir}")
             sys.exit(1)
+        if len(hits) > 1:
+            print(f"WARNING: multiple {label} caches found, using first: {hits[0].name}")
+            print(f"  (use --{label.replace(' ', '-')} to specify explicitly)")
+        return hits[0]
 
-    firing_disc = torch.load(disc_fire_f[0], map_location="cpu", weights_only=False)["firing"].bool()
-    firing_eval = torch.load(eval_fire_f[0], map_location="cpu", weights_only=False)["firing"].bool()
-    labels_disc = torch.load(disc_fire_f[0], map_location="cpu", weights_only=False)["labels"].bool()
-    labels_eval = torch.load(eval_fire_f[0], map_location="cpu", weights_only=False)["labels"].bool()
+    disc_fire_p = _resolve_cache(args.discovery_firing, "gemma_scope_layer20_en_discovery_firing_*.pt", "discovery firing")
+    eval_fire_p = _resolve_cache(args.eval_firing,      "gemma_scope_layer20_en_eval_firing_*.pt",      "eval firing")
+    disc_hidd_p = _resolve_cache(args.discovery_hidden, "gemma_scope_layer20_en_discovery_hidden_*.pt", "discovery hidden")
+    eval_hidd_p = _resolve_cache(args.eval_hidden,      "gemma_scope_layer20_en_eval_hidden_*.pt",      "eval hidden")
 
-    hidden_disc = torch.load(disc_hidd_f[0], map_location="cpu", weights_only=False)["hidden"].float()
-    hidden_eval = torch.load(eval_hidd_f[0], map_location="cpu", weights_only=False)["hidden"].float()
+    firing_disc = torch.load(disc_fire_p, map_location="cpu", weights_only=False)["firing"].bool()
+    firing_eval = torch.load(eval_fire_p, map_location="cpu", weights_only=False)["firing"].bool()
+    labels_disc = torch.load(disc_fire_p, map_location="cpu", weights_only=False)["labels"].bool()
+    labels_eval = torch.load(eval_fire_p, map_location="cpu", weights_only=False)["labels"].bool()
+
+    hidden_disc = torch.load(disc_hidd_p, map_location="cpu", weights_only=False)["hidden"].float()
+    hidden_eval = torch.load(eval_hidd_p, map_location="cpu", weights_only=False)["hidden"].float()
 
     print(f"Firing:  disc={tuple(firing_disc.shape)}  eval={tuple(firing_eval.shape)}")
     print(f"Hidden:  disc={tuple(hidden_disc.shape)}  eval={tuple(hidden_eval.shape)}")
@@ -522,7 +722,18 @@ def main() -> None:
     # ── dims ──────────────────────────────────────────────────────────────
     dims_toxicity = [int(d) for d in args.dims_toxicity.split(",")]
 
-    if args.resume_pretrain and pretrain_ckpt.exists():
+    if args.resume_finetuned and finetune_ckpt.exists():
+        # ── load finetuned model (skip Phase 1 + 2) ───────────────────────
+        print(f"\n── Phases 1+2: loading finetuned model from {finetune_ckpt} ──")
+        model, neuron_idx, feature_ids, dims_feature, dims_toxicity = load_checkpoint(
+            finetune_ckpt, device=device, implementation=impl,
+            connections=args.connections, difflogic_path=difflogic_path,
+        )
+        x_disc = hidden_disc.index_select(1, neuron_idx.cpu())
+        x_eval = hidden_eval.index_select(1, neuron_idx.cpu())
+        top_n  = len(neuron_idx)
+        args.skip_finetune = True   # don't re-run Phase 2
+    elif args.resume_pretrain and pretrain_ckpt.exists():
         # ── load pretrained model ──────────────────────────────────────────
         print(f"\n── Phase 1: loading from {pretrain_ckpt} ──")
         model, neuron_idx, feature_ids, dims_feature, dims_toxicity = load_checkpoint(
@@ -607,6 +818,23 @@ def main() -> None:
     else:
         final_metrics = eval_model(model, x_eval.to(device), labels_eval)
 
+    # ── Phase 3: evolutionary hill-climbing ───────────────────────────────
+    if not args.skip_evolution:
+        final_metrics = evolve_circuits(
+            model, x_eval.to(device), labels_eval,
+            device=device,
+            n_random_iters=args.evolution_random_iters,
+            mutation_size_min=args.evolution_mutation_min,
+            mutation_size_max=args.evolution_mutation_max,
+            n_greedy_passes=args.evolution_greedy_passes,
+            seed=args.seed,
+        )
+        evolution_ckpt = Path(args.save_dir) / "evolved_model.pt"
+        save_checkpoint(evolution_ckpt, model=model, neuron_idx=neuron_idx,
+                        feature_ids=feature_ids, dims_feature=dims_feature,
+                        dims_toxicity=dims_toxicity, phase="evolved",
+                        metrics={"final": asdict(final_metrics)})
+
     # ── export hard circuits ───────────────────────────────────────────────
     print(f"\n── Exporting hard Boolean circuits ──")
     hard_circuits = export_circuits(model, neuron_idx, feature_ids, meanings)
@@ -632,7 +860,7 @@ def main() -> None:
             "finetuned": str(finetune_ckpt) if not args.skip_finetune else None,
         },
     }
-    out_path = Path(args.out_dir) / "gemma_sae_distill_results.json"
+    out_path = Path(args.out_json) if args.out_json else Path(args.out_dir) / "gemma_sae_distill_results.json"
     out_path.parent.mkdir(parents=True, exist_ok=True)
     with open(out_path, "w") as f:
         json.dump(out, f, indent=2, ensure_ascii=False)

@@ -95,15 +95,17 @@ def firing_cache_path(args: argparse.Namespace, *, split: str, text_key: str, la
 
 
 def hidden_cache_metadata(args: argparse.Namespace, *, split: str, text_key: str, label_key: str) -> dict[str, Any]:
-    """Metadata for the max-pooled hidden-state cache (no SAE, no epsilon)."""
+    """Metadata for the pooled hidden-state cache (no SAE, no epsilon)."""
+    pooling = getattr(args, "pooling", "max")
     return {
         "version": 1,
-        "type": "hidden_maxpool",
+        "type": f"hidden_{pooling}pool",
         "split": split,
         "model": args.model,
         "dataset": args.dataset,
         "language": args.language,
         "layer": args.layer,
+        "pooling": pooling,
         "discovery_per_class": args.discovery_per_class,
         "eval_per_class": args.eval_per_class,
         "max_length": args.max_length,
@@ -117,7 +119,8 @@ def hidden_cache_path(args: argparse.Namespace, *, split: str, text_key: str, la
     meta = hidden_cache_metadata(args, split=split, text_key=text_key, label_key=label_key)
     encoded = json.dumps(meta, sort_keys=True, separators=(",", ":")).encode("utf-8")
     digest = hashlib.sha256(encoded).hexdigest()[:16]
-    name = f"gemma_scope_layer{args.layer}_{args.language}_{split}_hidden_{digest}.pt"
+    pooling = getattr(args, "pooling", "max")
+    name = f"gemma_scope_layer{args.layer}_{args.language}_{split}_hidden_{pooling}_{digest}.pt"
     return Path(args.firing_cache_dir) / name
 
 
@@ -284,12 +287,19 @@ def collect_hidden(
     label_key: str,
     batch_size: int,
     max_length: int,
+    pooling: str = "max",
 ) -> tuple[torch.Tensor, torch.Tensor]:
-    """Collect max-pooled hidden states at `layer` — shape [N, hidden_dim] float32."""
+    """Collect pooled hidden states at `layer` — shape [N, hidden_dim] float32.
+
+    pooling:
+      "max"  — max over non-padding tokens (default, original behaviour)
+      "mean" — mean over non-padding tokens
+      "last" — last non-padding token (best for causal/decoder models)
+    """
     model_device = next(model.parameters()).device
     all_hidden: list[torch.Tensor] = []
     all_labels: list[torch.Tensor] = []
-    for batch in tqdm(list(iter_batches(examples, batch_size)), desc="collecting hidden states"):
+    for batch in tqdm(list(iter_batches(examples, batch_size)), desc=f"collecting hidden states ({pooling}-pool)"):
         texts  = [str(row[text_key]) for row in batch]
         labels = [int(row[label_key]) for row in batch]
         toks = tokenizer(
@@ -306,11 +316,25 @@ def collect_hidden(
             attention_mask=toks["attention_mask"],
             layer=layer,
         )  # [batch, seq_len, hidden_dim]
-        # mask padding tokens before max-pool
-        mask = toks["attention_mask"].unsqueeze(-1).to(hidden.device, dtype=torch.bool)
-        hidden = hidden.masked_fill(~mask, float("-inf"))
-        maxpool = hidden.max(dim=1).values.cpu().float()  # [batch, hidden_dim]
-        all_hidden.append(maxpool)
+
+        attn = toks["attention_mask"].to(hidden.device)  # [batch, seq_len]
+
+        if pooling == "max":
+            mask3d = attn.unsqueeze(-1).bool()
+            pooled = hidden.masked_fill(~mask3d, float("-inf")).max(dim=1).values
+        elif pooling == "mean":
+            mask3d = attn.unsqueeze(-1).to(hidden.dtype)
+            pooled = (hidden * mask3d).sum(dim=1) / mask3d.sum(dim=1).clamp(min=1)
+        elif pooling == "last":
+            # index of last real token per sequence
+            lengths = attn.sum(dim=1)              # [batch]
+            last_idx = (lengths - 1).clamp(min=0)  # [batch]
+            idx = last_idx.view(-1, 1, 1).expand(-1, 1, hidden.size(-1))
+            pooled = hidden.gather(1, idx).squeeze(1)
+        else:
+            raise ValueError(f"unknown pooling {pooling!r}; expected 'max', 'mean', or 'last'")
+
+        all_hidden.append(pooled.cpu().float())
         all_labels.append(torch.tensor(labels, dtype=torch.bool))
     return torch.cat(all_hidden, dim=0), torch.cat(all_labels, dim=0)
 
@@ -634,6 +658,58 @@ def train_mlp_classifier(
     })
 
 
+def train_mlp_hidden_classifier(
+    train_hidden: torch.Tensor,
+    train_labels: torch.Tensor,
+    eval_hidden: torch.Tensor,
+    eval_labels: torch.Tensor,
+    *,
+    args: argparse.Namespace,
+) -> dict[str, Any]:
+    """Train MLP on raw hidden-state activations (all ~2k neurons, float)."""
+    from sklearn.neural_network import MLPClassifier
+    from sklearn.preprocessing import StandardScaler
+    from sklearn.pipeline import Pipeline
+
+    x_train = train_hidden.float().numpy()
+    y_train  = train_labels.long().numpy()
+    x_eval  = eval_hidden.float().numpy()
+    y_eval   = eval_labels.long().numpy()
+
+    hidden = getattr(args, "mlp_hidden", (256, 128, 64))
+    clf = Pipeline([
+        ("scaler", StandardScaler()),
+        ("mlp", MLPClassifier(
+            hidden_layer_sizes=hidden,
+            max_iter=1000,
+            random_state=args.seed,
+            early_stopping=True,
+            validation_fraction=0.15,
+            n_iter_no_change=50,
+        )),
+    ])
+    clf.fit(x_train, y_train)
+
+    def _m(x, y):
+        y_pred = clf.predict(x).astype(bool)
+        return binary_metrics(torch.as_tensor(y, dtype=torch.bool), torch.as_tensor(y_pred, dtype=torch.bool))
+
+    train_m = _m(x_train, y_train)
+    eval_m  = _m(x_eval, y_eval)
+    mlp_step = clf["mlp"]
+    return {
+        "classifier": "mlp-hidden",
+        "input_dim": x_train.shape[1],
+        "hidden_layer_sizes": list(hidden),
+        "n_iter": mlp_step.n_iter_,
+        "best_validation_score": round(float(mlp_step.best_validation_score_), 6),
+        "train_metrics": asdict(train_m),
+        "eval_metrics":  asdict(eval_m),
+        "eval_hard_metrics": asdict(eval_m),
+        "eval_soft_metrics": asdict(eval_m),
+    }
+
+
 def attach_feature_meanings_to_logic_result(
     logic_result: dict[str, Any] | None,
     *,
@@ -784,10 +860,12 @@ def main() -> None:
     parser.add_argument("--firing-cache-dir", default=str(DEFAULT_OUT_DIR / "firing_cache"))
     parser.add_argument("--no-firing-cache", action="store_true")
     parser.add_argument("--collect-hidden", action="store_true",
-                        help="Also collect and cache max-pooled hidden states for SAE distillation")
+                        help="Also collect and cache pooled hidden states for SAE distillation")
+    parser.add_argument("--pooling", default="max", choices=("max", "mean", "last"),
+                        help="Sequence pooling strategy for hidden states: max (default), mean, or last token")
     parser.add_argument("--save-ranked-top-k", type=int, default=50)
     parser.add_argument("--classifier",
-                        choices=("or", "difflogic", "logistic", "decision_tree", "naive_bayes", "xgboost", "mlp"),
+                        choices=("or", "difflogic", "logistic", "decision_tree", "naive_bayes", "xgboost", "mlp", "mlp-hidden"),
                         default="or")
     parser.add_argument("--logistic-c", type=float, default=1.0)
     parser.add_argument("--tree-max-depth", type=int, default=6)
@@ -947,6 +1025,7 @@ def main() -> None:
                 discovery, model=model, tokenizer=tokenizer, layer=args.layer,
                 text_key=text_key, label_key=label_key,
                 batch_size=args.batch_size, max_length=args.max_length,
+                pooling=args.pooling,
             )
             if not args.no_firing_cache:
                 save_hidden_cache(disc_hpath, disc_hmeta, disc_hidden, discovery_labels)
@@ -955,6 +1034,7 @@ def main() -> None:
                 evaluation, model=model, tokenizer=tokenizer, layer=args.layer,
                 text_key=text_key, label_key=label_key,
                 batch_size=args.batch_size, max_length=args.max_length,
+                pooling=args.pooling,
             )
             if not args.no_firing_cache:
                 save_hidden_cache(eval_hpath, eval_hmeta, eval_hidden, eval_labels)
@@ -1013,6 +1093,23 @@ def main() -> None:
             feature_ids=feature_ids, args=args,
         )
         metrics = Metrics(**logic_result["eval_hard_metrics"])
+    elif args.classifier == "mlp-hidden":
+        disc_hpath = hidden_cache_path(args, split="discovery", text_key=text_key, label_key=label_key)
+        eval_hpath = hidden_cache_path(args, split="eval",      text_key=text_key, label_key=label_key)
+        disc_hmeta = hidden_cache_metadata(args, split="discovery", text_key=text_key, label_key=label_key)
+        eval_hmeta = hidden_cache_metadata(args, split="eval",      text_key=text_key, label_key=label_key)
+        disc_hcache = load_hidden_cache(disc_hpath, disc_hmeta)
+        eval_hcache = load_hidden_cache(eval_hpath, eval_hmeta)
+        if disc_hcache is None or eval_hcache is None:
+            raise RuntimeError(
+                "Hidden-state caches not found. Re-run with --collect-hidden first to build them."
+            )
+        disc_hidden, _ = disc_hcache
+        eval_hidden, _ = eval_hcache
+        logic_result = train_mlp_hidden_classifier(
+            disc_hidden, discovery_labels, eval_hidden, eval_labels, args=args,
+        )
+        metrics = Metrics(**logic_result["eval_hard_metrics"])
 
     print("selected features:")
     for f in features:
@@ -1051,8 +1148,10 @@ def main() -> None:
             print("feature importances (sorted):")
             for entry in logic_result["feature_importances_sorted"][:10]:
                 print(f"  {entry['input']} fid={entry['feature_id']}  importance={entry['importance']:.4f}")
-        elif args.classifier == "mlp":
+        elif args.classifier in ("mlp", "mlp-hidden"):
             print(f"hidden={logic_result['hidden_layer_sizes']}  iters={logic_result['n_iter']}  best_val={logic_result['best_validation_score']:.4f}")
+            if args.classifier == "mlp-hidden":
+                print(f"input_dim={logic_result['input_dim']} (all hidden-state neurons)")
         elif args.classifier == "difflogic":
             print("difflogic soft eval metrics:")
             print(json.dumps(logic_result["eval_soft_metrics"], indent=2))

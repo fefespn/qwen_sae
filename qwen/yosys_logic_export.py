@@ -318,7 +318,12 @@ def main() -> None:
         if args.circuit == "all":
             for fc in circuits["features"]:
                 safe = fc["name"].replace("/", "_")
-                to_export.append((f"feature_{safe}", fc["expr"], fc["inputs"], "verilog_name",
+                # substitute position names (i42) → neuron port names (n1645) in expression
+                ne = fc["expr"]
+                for inp in fc["inputs"]:
+                    pos_num = inp["name"][1:]  # "i42" -> "42"
+                    ne = re.sub(rf"\bi{pos_num}\b", inp["verilog_name"], ne)
+                to_export.append((f"feature_{safe}", ne, fc["inputs"], "verilog_name",
                     lambda item: f"// {item['verilog_name']} = neuron {item['feature_id']}"))
 
         for mod_name, expr, inps, name_key, cfn in to_export:

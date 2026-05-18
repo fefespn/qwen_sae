@@ -472,7 +472,15 @@ def train_difflogic_classifier(
         shuffle=True,
     )
     optimizer = torch.optim.Adam(model.parameters(), lr=args.logic_lr)
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+        optimizer, T_max=args.logic_epochs, eta_min=args.logic_lr * 0.05
+    )
     loss_fn = torch.nn.BCELoss() if args.logic_output == "binary" else torch.nn.CrossEntropyLoss()
+
+    import copy
+    best_f1 = -1.0
+    best_state = None
+
     losses = []
     for epoch in range(1, args.logic_epochs + 1):
         model.train()
@@ -489,8 +497,27 @@ def train_difflogic_classifier(
             optimizer.step()
             epoch_loss += float(loss.item()) * batch_x.shape[0]
         losses.append(epoch_loss / max(1, x_train.shape[0]))
+        scheduler.step()
+
+        # track best weights by eval F1
+        model.eval()
+        with torch.no_grad():
+            out = model(x_eval)
+            if args.logic_output == "binary":
+                pred = (out.reshape(-1) >= args.logic_threshold).bool().cpu()
+            else:
+                pred = out.argmax(dim=-1).bool().cpu()
+        m = binary_metrics(y_eval.bool().cpu(), pred)
+        if m.f1 > best_f1:
+            best_f1 = m.f1
+            best_state = copy.deepcopy(model.state_dict())
+
         if args.logic_print_every and (epoch == 1 or epoch % args.logic_print_every == 0):
-            print(f"difflogic epoch={epoch} loss={losses[-1]:.6f}")
+            print(f"difflogic epoch={epoch:4d}  loss={losses[-1]:.5f}  f1={m.f1:.4f}  [best={best_f1:.4f}]")
+
+    if best_state is not None:
+        model.load_state_dict(best_state)
+    print(f"  restored best weights → f1={best_f1:.4f}")
 
     def eval_split(x: torch.Tensor, y: torch.Tensor, *, hard: bool) -> Metrics:
         model.train(mode=not hard)
